@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { Application, Container, Sprite, Graphics, Texture } from 'pixi.js'
-import { preloadAllAssets } from '../../engine/AssetLoader.js'
+import { preloadAllAssets, getAssetUrl } from '../../engine/AssetLoader.js'
 import { ASSET_VERSION, BASE_ASSETS, CROPS } from '../../config/assetsConfig.js'
 import './SplashScreen.css'
 
@@ -21,7 +21,7 @@ const LOADING_TIPS = [
 ]
 
 /** Minimum splash duration in ms (prevents jarring flash on fast loads) */
-const MIN_SPLASH_MS = 1500
+const MIN_SPLASH_MS = 2500
 
 /**
  * Loads a texture from a URL, crops it, and keys out black or white backgrounds.
@@ -192,19 +192,19 @@ export default function SplashScreen({ onComplete }) {
         canvasContainerRef.current.appendChild(app.canvas)
         app.canvas.style.imageRendering = 'pixelated'
 
-        // Load all required pixel art textures
-        const turfTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.turf.path)
-        const soilTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.soil.path)
-        const seedlingTexture = await loadUserTileAndMakeTransparent(CROPS.wheat.stages.seedling)
-        const growingTexture = await loadUserTileAndMakeTransparent(CROPS.wheat.stages.growing)
-        const ripeTexture = await loadUserTileAndMakeTransparent(CROPS.wheat.stages.ripe)
-        const rockTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.rock.path)
-        const copperTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.copper_ore.path)
-        const ironTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.iron_ore.path)
-        const crystalTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.crystal_ore.path)
+        // Load all required pixel art textures (using getAssetUrl to load from IndexedDB cache if available)
+        const turfTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.turf.path))
+        const soilTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.soil.path))
+        const seedlingTexture = await loadUserTileAndMakeTransparent(getAssetUrl(CROPS.wheat.stages.seedling))
+        const growingTexture = await loadUserTileAndMakeTransparent(getAssetUrl(CROPS.wheat.stages.growing))
+        const ripeTexture = await loadUserTileAndMakeTransparent(getAssetUrl(CROPS.wheat.stages.ripe))
+        const rockTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.rock.path))
+        const copperTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.copper_ore.path))
+        const ironTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.iron_ore.path))
+        const crystalTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.crystal_ore.path))
         
         const droneTexture = await loadCropAndMakeTransparent(
-          BASE_ASSETS.drone.path,
+          getAssetUrl(BASE_ASSETS.drone.path),
           BASE_ASSETS.drone.cropRect,
           true
         )

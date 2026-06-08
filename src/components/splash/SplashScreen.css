@@ -104,7 +104,7 @@
 .splash-screen__bar-outer {
   width: 100%;
   height: 24px;
-  background: #d4e2ed; /* Light blue-grey unfilled background */
+  background: #e2e8f0; /* High contrast light grey background */
   border: 3px solid #3c2a21; /* Dark retro brown border */
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25);
   position: relative;
@@ -114,7 +114,7 @@
 
 .splash-screen__bar-inner {
   height: 100%;
-  background-color: #5ebd74; /* Vibrant solar-punk green progress fill */
+  background-color: #22c55e; /* Vibrant high-contrast progress green fill */
   border-right: 3px solid #3c2a21; /* Clean boundary between fill and background */
   transition: width 0.2s ease-in-out;
 }
