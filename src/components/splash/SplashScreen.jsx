@@ -21,7 +21,7 @@ const LOADING_TIPS = [
 ]
 
 /** Minimum splash duration in ms (prevents jarring flash on fast loads) */
-const MIN_SPLASH_MS = 15000
+const MIN_SPLASH_MS = 1500
 
 /**
  * Loads a texture from a URL, crops it, and keys out black or white backgrounds.
