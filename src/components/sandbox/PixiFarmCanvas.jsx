@@ -3,6 +3,7 @@ import { Application, Graphics, Text, TextStyle, Container, Sprite, Texture, Til
 import './PixiFarmCanvas.css'
 import { useGameStore } from '../../store/gameStore.js'
 import { BASE_ASSETS, CROPS } from '../../config/assetsConfig.js'
+import { getAssetUrl } from '../../engine/AssetLoader.js'
 
 /**
  * Loads a texture from a URL, crops it to the specified rect, and filters out 
@@ -139,13 +140,13 @@ export default function PixiFarmCanvas({ interactive = true }) {
       app.canvas.style.imageRendering = 'pixelated'
       appRef.current = app
 
-      // Load base tiles from configuration
-      const turfTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.turf.path)
-      const soilTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.soil.path)
-      const rockTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.rock.path)
-      const copperOreTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.copper_ore.path)
-      const ironOreTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.iron_ore.path)
-      const crystalOreTexture = await loadUserTileAndMakeTransparent(BASE_ASSETS.crystal_ore.path)
+      // Load base tiles from configuration (using pre-cached blob URLs when available)
+      const turfTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.turf.path))
+      const soilTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.soil.path))
+      const rockTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.rock.path))
+      const copperOreTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.copper_ore.path))
+      const ironOreTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.iron_ore.path))
+      const crystalOreTexture = await loadUserTileAndMakeTransparent(getAssetUrl(BASE_ASSETS.crystal_ore.path))
       
       // Ensure pixel art remains sharp
       turfTexture.source.scaleMode = 'nearest'
@@ -156,7 +157,7 @@ export default function PixiFarmCanvas({ interactive = true }) {
       crystalOreTexture.source.scaleMode = 'nearest'
 
       const droneTexture = await loadCropAndMakeTransparent(
-        BASE_ASSETS.drone.path, 
+        getAssetUrl(BASE_ASSETS.drone.path), 
         BASE_ASSETS.drone.cropRect, 
         true
       )
@@ -174,9 +175,9 @@ export default function PixiFarmCanvas({ interactive = true }) {
 
       // Load all crop growth stages dynamically from configuration
       for (const [cropKey, cropData] of Object.entries(CROPS)) {
-        const seedlingPath = cropData.stages.seedling
-        const growingPath = cropData.stages.growing
-        const ripePath = cropData.stages.ripe
+        const seedlingPath = getAssetUrl(cropData.stages.seedling)
+        const growingPath = getAssetUrl(cropData.stages.growing)
+        const ripePath = getAssetUrl(cropData.stages.ripe)
 
         const seeded = await loadUserTileAndMakeTransparent(seedlingPath)
         const growing = await loadUserTileAndMakeTransparent(growingPath)

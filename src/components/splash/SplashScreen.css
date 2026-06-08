@@ -1,0 +1,180 @@
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #afdcf7;
+  z-index: 99999;
+  transition: opacity 0.6s ease;
+  overflow: hidden;
+}
+
+.splash-screen--fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- Full Screen Canvas Container ---- */
+.splash-screen__canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+/* ---- Cinematic Text & Loading Overlay ---- */
+.splash-screen__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 80px 40px;
+  box-sizing: border-box;
+  background: linear-gradient(
+    180deg,
+    rgba(60, 42, 33, 0.15) 0%,
+    rgba(60, 42, 33, 0.45) 100%
+  );
+  pointer-events: none;
+}
+
+/* Centered Title Section */
+.splash-screen__center {
+  margin-top: auto;
+  margin-bottom: auto;
+  text-align: center;
+}
+
+.splash-screen__title-large {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 76px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  text-shadow: 
+    0px 4px 12px rgba(0, 0, 0, 0.4),
+    0px 2px 4px rgba(3c, 2a, 21, 0.3);
+}
+
+.splash-screen__subtitle-large {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: #a5d6a7; /* Cozy pale meadow green */
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin: 0;
+  text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Bottom Progress Panel */
+.splash-screen__bottom {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* Loading Status Text */
+.splash-screen__status-msg {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #3c2a21; /* Dark retro brown */
+  letter-spacing: 0.15em;
+  text-shadow: 0px 1px 2px rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+
+/* Progress Bar (Retro White Frame) */
+.splash-screen__bar-outer {
+  width: 100%;
+  height: 24px;
+  background: #d4e2ed; /* Light blue-grey unfilled background */
+  border: 3px solid #3c2a21; /* Dark retro brown border */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25);
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.splash-screen__bar-inner {
+  height: 100%;
+  background-color: #ffffff; /* Solid white progress fill */
+  border-right: 3px solid #3c2a21; /* Clean boundary between fill and background */
+  transition: width 0.2s ease-in-out;
+}
+
+/* Tips Text */
+.splash-screen__tip-text-large {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #f5f5f5;
+  text-align: center;
+  max-width: 540px;
+  line-height: 1.5;
+  text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.5);
+  margin-top: 6px;
+}
+
+/* Retro Edition Badge (Bottom Right) */
+.splash-screen__version-badge {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(60, 42, 33, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.05em;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
+}
+
+/* ---- Responsive Adaptations ---- */
+@media (max-width: 768px) {
+  .splash-screen__title-large {
+    font-size: 44px;
+  }
+
+  .splash-screen__subtitle-large {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+  }
+
+  .splash-screen__overlay {
+    padding: 60px 24px;
+  }
+
+  .splash-screen__bottom {
+    max-width: 90%;
+  }
+
+  .splash-screen__tip-text-large {
+    font-size: 13px;
+  }
+
+  .splash-screen__version-badge {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    margin-top: 12px;
+  }
+}

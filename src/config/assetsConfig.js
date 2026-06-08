@@ -4,6 +4,9 @@
  * or change game parameters (XP rewards and Energy costs).
  */
 
+/** Bump this version whenever any asset file changes to invalidate the IndexedDB cache. */
+export const ASSET_VERSION = '1.0.0'
+
 export const BASE_ASSETS = {
   turf: {
     path: '/assets/farm_tiles/grass.png',

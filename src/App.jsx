@@ -1,12 +1,15 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import HomePage from './pages/HomePage.jsx'
 import SandboxPage from './pages/SandboxPage.jsx'
 import ProgressTreePage from './pages/ProgressTreePage.jsx'
 import HelpManualModal from './components/common/HelpManualModal.jsx'
+import SplashScreen from './components/splash/SplashScreen.jsx'
 import { useGameStore } from './store/gameStore.js'
 
 export default function App() {
+  const [assetsReady, setAssetsReady] = useState(false)
+
   // Passive drone energy recharge loop (3 energy every 2 seconds)
   useEffect(() => {
     const rechargeInterval = setInterval(() => {
@@ -14,6 +17,15 @@ export default function App() {
     }, 2000)
     return () => clearInterval(rechargeInterval)
   }, [])
+
+  const handleSplashComplete = useCallback(() => {
+    setAssetsReady(true)
+  }, [])
+
+  // Show splash screen until all assets are preloaded
+  if (!assetsReady) {
+    return <SplashScreen onComplete={handleSplashComplete} />
+  }
 
   return (
     <>
