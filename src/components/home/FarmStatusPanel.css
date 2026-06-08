@@ -1,0 +1,114 @@
+.farm-status {
+  background-color: var(--color-ui-bg-paper);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  width: 288px;
+  box-shadow: 4px 4px 0 rgba(60, 42, 33, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.farm-status__bg-tint {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(129, 199, 132, 0.05);
+}
+
+.farm-status__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.farm-status__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid rgba(60, 42, 33, 0.1);
+  padding-bottom: 8px;
+}
+
+.farm-status__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-soil-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.farm-status__title-icon {
+  color: var(--color-meadow-green);
+}
+
+.farm-status__indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--color-meadow-green);
+  animation: pulse 2s ease-in-out infinite;
+  border: 1px solid var(--color-on-primary-container);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.farm-status__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.farm-status__stat {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.farm-status__stat-label {
+  color: var(--color-outline);
+  font-size: 12px;
+}
+
+.farm-status__stat-value {
+  font-weight: 700;
+}
+
+.farm-status__stat-value--primary {
+  color: var(--color-primary);
+}
+
+.farm-status__stat-value--amber {
+  color: var(--color-harvest-amber);
+}
+
+.farm-status__sync-btn {
+  width: 100%;
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
+  font-weight: 700;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 16px;
+  padding: 8px 0;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.farm-status__sync-btn:hover {
+  background-color: var(--color-secondary-fixed);
+}

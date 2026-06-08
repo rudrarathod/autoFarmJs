@@ -1,0 +1,280 @@
+/* ========================================
+   Rural Automation - Design System
+   ======================================== */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+/* ---- CSS Custom Properties (Design Tokens) ---- */
+:root {
+  /* Primary */
+  --color-primary: #006e1c;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #4caf50;
+  --color-on-primary-container: #003c0b;
+  --color-primary-fixed: #94f990;
+  --color-primary-fixed-dim: #78dc77;
+  --color-on-primary-fixed: #002204;
+  --color-on-primary-fixed-variant: #005313;
+  --color-inverse-primary: #78dc77;
+
+  /* Secondary */
+  --color-secondary: #0061a4;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #33a0fd;
+  --color-on-secondary-container: #00355c;
+  --color-secondary-fixed: #d1e4ff;
+  --color-secondary-fixed-dim: #9ecaff;
+  --color-on-secondary-fixed: #001d36;
+  --color-on-secondary-fixed-variant: #00497d;
+
+  /* Tertiary */
+  --color-tertiary: #7e5700;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #cd8f00;
+  --color-on-tertiary-container: #462e00;
+  --color-tertiary-fixed: #ffdeac;
+  --color-tertiary-fixed-dim: #ffba38;
+  --color-on-tertiary-fixed: #281900;
+  --color-on-tertiary-fixed-variant: #604100;
+
+  /* Error */
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* Surface */
+  --color-surface: #f4faff;
+  --color-on-surface: #0e1d25;
+  --color-surface-variant: #d5e5ef;
+  --color-on-surface-variant: #3f4a3c;
+  --color-surface-dim: #ccdce7;
+  --color-surface-bright: #f4faff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #e7f6ff;
+  --color-surface-container: #e0f0fb;
+  --color-surface-container-high: #daebf5;
+  --color-surface-container-highest: #d5e5ef;
+  --color-surface-tint: #006e1c;
+
+  /* Background */
+  --color-background: #f4faff;
+  --color-on-background: #0e1d25;
+
+  /* Outline */
+  --color-outline: #6f7a6b;
+  --color-outline-variant: #becab9;
+
+  /* Inverse */
+  --color-inverse-surface: #23323a;
+  --color-inverse-on-surface: #e3f3fd;
+
+  /* Custom Game Colors */
+  --color-meadow-green: #81C784;
+  --color-harvest-amber: #FFD54F;
+  --color-soil-dark: #3C2A21;
+  --color-automation-blue: #E3F2FD;
+  --color-ui-bg-paper: #F9FBF2;
+
+  /* Spacing */
+  --spacing-unit: 4px;
+  --spacing-margin: 24px;
+  --spacing-gutter: 16px;
+  --container-max: 1200px;
+
+  /* Border Radius */
+  --radius-default: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+}
+
+/* ---- Reset & Base ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--color-on-surface);
+  background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--color-meadow-green);
+  color: var(--color-on-primary-container);
+}
+
+/* ---- Typography ---- */
+.font-headline-lg {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.font-headline-lg-mobile {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.font-headline-md {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+}
+
+.font-body-lg {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 400;
+}
+
+.font-body-md {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+.font-label-tech {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+/* ---- Material Symbols ---- */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ---- Pixel Borders ---- */
+.pixel-border {
+  border: 2px solid var(--color-soil-dark);
+}
+
+.pixel-border-thick {
+  border: 4px solid var(--color-soil-dark);
+}
+
+/* ---- Utility Effects ---- */
+.top-light-inset {
+  box-shadow: inset 2px 2px 0px 0px rgba(255, 255, 255, 0.4);
+}
+
+.glass-panel {
+  background: rgba(249, 251, 242, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.pixelated {
+  image-rendering: pixelated;
+}
+
+/* ---- Button Utilities ---- */
+.btn-press {
+  transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-press:active {
+  transform: translateY(2px);
+}
+
+.pressed-state:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+/* ---- Grid Background Pattern ---- */
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(var(--color-surface-container-high) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-surface-container-high) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: center;
+}
+
+/* ---- Scrollbar Hide ---- */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ---- Animations ---- */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(129, 199, 132, 0.4); }
+  50% { box-shadow: 0 0 12px 4px rgba(129, 199, 132, 0.2); }
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+/* ---- Page Transitions ---- */
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}

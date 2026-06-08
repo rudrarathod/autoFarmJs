@@ -1,0 +1,23 @@
+.pixi-home-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.pixi-home-bg canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  image-rendering: pixelated;
+}
+
+.pixi-home-bg__overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(14, 29, 37, 0.1);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}

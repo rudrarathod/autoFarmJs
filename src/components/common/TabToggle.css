@@ -1,0 +1,41 @@
+.tab-toggle {
+  position: absolute;
+  top: var(--spacing-margin);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  background-color: var(--color-ui-bg-paper);
+  border-radius: 50px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tab-toggle__btn {
+  padding: 8px 24px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s ease;
+  background: transparent;
+}
+
+.tab-toggle__btn--inactive {
+  color: var(--color-on-surface-variant);
+}
+
+.tab-toggle__btn--inactive:hover {
+  background-color: var(--color-surface-container);
+}
+
+.tab-toggle__btn--active {
+  background-color: var(--color-meadow-green);
+  color: var(--color-on-primary-fixed);
+}
+
+/* The first button when active (FARM view) */
+.tab-toggle__btn:first-child:not(.tab-toggle__btn--inactive) {
+  background-color: var(--color-meadow-green);
+  color: var(--color-on-primary-fixed);
+}

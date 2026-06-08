@@ -1,0 +1,30 @@
+.hud-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: var(--color-surface-container-low);
+  padding: 8px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+}
+
+.hud-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-stat-icon--amber { color: var(--color-harvest-amber); }
+.hud-stat-icon--blue { color: var(--color-automation-blue); }
+.hud-stat-icon--green { color: var(--color-meadow-green); }
+
+.hud-stat-value {
+  color: var(--color-on-surface);
+  font-size: 12px;
+}
+
+.hud-divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--color-outline-variant);
+}

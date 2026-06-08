@@ -1,0 +1,52 @@
+.pixi-farm-canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.pixi-farm-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.pixi-farm-canvas__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(139, 195, 74, 0.5);
+  color: var(--color-on-surface);
+}
+
+/* Mobile zoom tools */
+.canvas-tools {
+  position: absolute;
+  bottom: 96px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  gap: 8px;
+}
+
+.canvas-tools__btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+@media (max-width: 1023px) {
+  .canvas-tools {
+    display: flex;
+    bottom: 32px;
+  }
+}

@@ -1,0 +1,25 @@
+.home-page {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+}
+
+.home-page__main {
+  margin-left: 320px;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--spacing-margin);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.home-page__status-wrap {
+  margin-left: auto;
+  margin-bottom: 32px;
+  pointer-events: auto;
+}
