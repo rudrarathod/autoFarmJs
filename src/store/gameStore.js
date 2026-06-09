@@ -84,6 +84,7 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
 `,
       droneStatus: 'idle', // 'idle' | 'running'
       droneConsole: [], // Array of { text, type, id }
+      droneMessage: 'Idle',
       isHelpOpen: false,
 
       // --- Tech Tree Unlocks ---
@@ -96,11 +97,16 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
 
       setDronePosition: (row, col) => set({ droneRow: row, droneCol: col }),
       setDroneScript: (script) => set({ droneScript: script }),
-      setDroneStatus: (status) => set({ droneStatus: status }),
+      setDroneStatus: (status) => set((state) => ({
+        droneStatus: status,
+        droneMessage: status === 'idle' ? 'Idle' : state.droneMessage
+      })),
+      setDroneMessage: (msg) => set({ droneMessage: msg }),
       setDroneSpeedMultiplier: (multiplier) => set({ droneSpeedMultiplier: multiplier }),
       setHelpOpen: (isOpen) => set({ isHelpOpen: isOpen }),
       addDroneLog: (text, type = 'info') => set((state) => ({
-        droneConsole: [...state.droneConsole.slice(-50), { text, type, id: Date.now() }]
+        droneConsole: [...state.droneConsole.slice(-50), { text, type, id: Date.now() }],
+        droneMessage: text
       })),
       clearDroneConsole: () => set({ droneConsole: [] }),
 
@@ -433,13 +439,14 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
         droneCol: 0,
         droneStatus: 'idle',
         droneConsole: [],
+        droneMessage: 'Idle',
         isHelpOpen: false
       })
     }),
     {
       name: 'rural-automation-save-v3', // Storage key name
       partialize: (state) => {
-        const { droneStatus, isHelpOpen, ...rest } = state
+        const { droneStatus, isHelpOpen, droneMessage, ...rest } = state
         return rest
       }
     }

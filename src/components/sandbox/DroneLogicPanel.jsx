@@ -22,6 +22,8 @@ export default function DroneLogicPanel() {
   const runnerRef = useRef(null)
   const consoleEndRef = useRef(null)
   const editorRef = useRef(null)
+  const monacoRef = useRef(null)
+  const decorationsRef = useRef([])
 
   // Auto-scroll console to bottom
   useEffect(() => {
@@ -29,6 +31,56 @@ export default function DroneLogicPanel() {
       consoleEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [droneConsole, activeTab])
+
+  const clearLineHighlight = useCallback(() => {
+    if (editorRef.current && decorationsRef.current.length > 0) {
+      decorationsRef.current = editorRef.current.deltaDecorations(decorationsRef.current, [])
+    }
+  }, [])
+
+  const highlightLine = useCallback((lineNum) => {
+    const editor = editorRef.current
+    const monaco = monacoRef.current
+    if (!editor || !monaco) return
+
+    decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [
+      {
+        range: new monaco.Range(lineNum, 1, lineNum, 1),
+        options: {
+          isWholeLine: true,
+          className: 'drone-editor-active-line',
+          marginClassName: 'drone-editor-active-line-margin',
+          glyphMarginClassName: 'drone-editor-active-line-glyph',
+        }
+      }
+    ])
+  }, [])
+
+  const highlightErrorLine = useCallback((lineNum) => {
+    const editor = editorRef.current
+    const monaco = monacoRef.current
+    if (!editor || !monaco) return
+
+    decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [
+      {
+        range: new monaco.Range(lineNum, 1, lineNum, 1),
+        options: {
+          isWholeLine: true,
+          className: 'drone-editor-error-line',
+          marginClassName: 'drone-editor-error-line-margin',
+          glyphMarginClassName: 'drone-editor-error-line-glyph',
+        }
+      }
+    ])
+  }, [])
+
+  const highlightLineRef = useRef(null)
+  const highlightErrorLineRef = useRef(null)
+  
+  useEffect(() => {
+    highlightLineRef.current = highlightLine
+    highlightErrorLineRef.current = highlightErrorLine
+  })
 
   // Initialize the drone runner once
   useEffect(() => {
@@ -49,7 +101,15 @@ export default function DroneLogicPanel() {
       useGameStore.getState().setDroneStatus(status)
     }
 
-    runnerRef.current = createDroneRunner(getStore, onLog, onDroneMove, onStatusChange)
+    const onLineExecute = (lineNum) => {
+      highlightLineRef.current?.(lineNum)
+    }
+
+    const onErrorLine = (lineNum) => {
+      highlightErrorLineRef.current?.(lineNum)
+    }
+
+    runnerRef.current = createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, onLineExecute, onErrorLine)
 
     return () => {
       if (runnerRef.current) {
@@ -60,23 +120,23 @@ export default function DroneLogicPanel() {
 
   const handleRun = useCallback(() => {
     if (runnerRef.current && droneStatus !== 'running') {
+      clearLineHighlight()
       useGameStore.getState().clearDroneConsole()
-      setActiveTab('console')
       runnerRef.current.run(droneScript)
     }
-  }, [droneScript, droneStatus])
+  }, [droneScript, droneStatus, clearLineHighlight])
 
   const handleStep = useCallback(() => {
     if (runnerRef.current) {
       if (droneStatus === 'idle') {
+        clearLineHighlight()
         useGameStore.getState().clearDroneConsole()
-        setActiveTab('console')
         runnerRef.current.step(droneScript)
       } else if (droneStatus === 'paused') {
         runnerRef.current.step(droneScript)
       }
     }
-  }, [droneScript, droneStatus])
+  }, [droneScript, droneStatus, clearLineHighlight])
 
   const handleResume = useCallback(() => {
     if (runnerRef.current && droneStatus === 'paused') {
@@ -89,12 +149,14 @@ export default function DroneLogicPanel() {
     if (runnerRef.current) {
       runnerRef.current.stop()
       useGameStore.getState().setDroneStatus('idle')
+      clearLineHighlight()
     }
-  }, [])
+  }, [clearLineHighlight])
 
   const handleEditorChange = useCallback((value) => {
     setDroneScript(value || '')
-  }, [setDroneScript])
+    clearLineHighlight()
+  }, [setDroneScript, clearLineHighlight])
 
   // Sync editor with external store changes (like game reset or demo templates)
   // without interfering with the local keystroke buffer to preserve undo/redo history.
@@ -114,6 +176,7 @@ export default function DroneLogicPanel() {
    */
   function handleEditorMount(editor, monaco) {
     editorRef.current = editor
+    monacoRef.current = monaco
 
     // Configure JavaScript compiler options to target ES6 and include only ES6 core (no DOM/browser libraries)
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
@@ -273,7 +336,7 @@ export default function DroneLogicPanel() {
               padding: { top: 12, bottom: 12 },
               lineNumbers: 'on',
               lineNumbersMinChars: 3,
-              glyphMargin: false,
+              glyphMargin: true,
               folding: false,
               lineDecorationsWidth: 12,
               overviewRulerLanes: 0,
@@ -400,18 +463,10 @@ export default function DroneLogicPanel() {
                 <MaterialIcon icon="redo" />
                 STEP SCRIPT
               </button>
-              <button
-                className="drone-logic-panel__recall-btn btn-press pixel-border-thick"
-                onClick={() => useGameStore.getState().recallAndCharge()}
-                title="Recall drone to base and fully recharge"
-              >
-                <MaterialIcon icon="bolt" filled />
-                RECALL & CHARGE
-              </button>
             </>
           )}
           <button
-            className="drone-logic-panel__save-btn btn-press pixel-border"
+            className="drone-logic-panel__save-btn btn-press pixel-border-thick"
             onClick={() => useGameStore.getState().clearDroneConsole()}
             title="Clear Console"
           >

@@ -15,11 +15,67 @@ const DEFAULT_STEP_DELAY = 600 // ms between each drone action
  * Creates a drone execution context bound to the game store.
  * Returns { run, stop, step } controls.
  */
-export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) {
+export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, onLineExecute, onErrorLine) {
   let abortController = null
   let isRunning = false
   let isStepMode = false
   let stepResolver = null
+
+  /**
+   * Helper to parse line number of user script from an error stack trace.
+   */
+  function getErrorLine(err) {
+    if (!err || !err.stack) return null
+    try {
+      const lines = err.stack.split('\n')
+      for (const line of lines) {
+        if (line.includes('userScript')) {
+          const match = line.match(/:(\d+):\d+\)?$/) || line.match(/Function:(\d+):\d+$/)
+          if (match) {
+            const stackLine = parseInt(match[1], 10)
+            return stackLine - 4
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+    return null
+  }
+
+  /**
+   * Helper to parse the line number of user script from call stack.
+   */
+  function getCurrentUserLine() {
+    try {
+      const stack = new Error().stack
+      if (!stack) return null
+      
+      const lines = stack.split('\n')
+      for (const line of lines) {
+        if (line.includes('userScript')) {
+          const match = line.match(/:(\d+):\d+\)?$/) || line.match(/Function:(\d+):\d+$/)
+          if (match) {
+            const stackLine = parseInt(match[1], 10)
+            return stackLine - 4
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+    return null
+  }
+
+  /**
+   * Highlights the current active line in the user editor.
+   */
+  function trackLine() {
+    const line = getCurrentUserLine()
+    if (line !== null && onLineExecute) {
+      onLineExecute(line)
+    }
+  }
 
   /**
    * Sleeps for the given duration, but can be aborted.
@@ -104,22 +160,24 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) 
        * drone.harvest() — Harvests the crop at the drone's current tile.
        */
       async harvest() {
+        trackLine()
         checkEnergy()
         const { droneRow, droneCol } = getStore()
         const tile = getStore().grid[droneRow]?.[droneCol]
         if (!tile) {
-          onLog('⚠️ No tile at current position', 'warn')
-          return false
+          throw new Error('No tile at current position')
         }
         let result = false
         if (tile.type === 'ripe') {
           result = getStore().harvestCrop(droneRow, droneCol)
-          onLog(result ? `🌾 Harvested ${tile.crop || 'wheat'} at (${droneRow}, ${droneCol})` : '❌ Harvest failed (no energy?)', result ? 'success' : 'error')
+          if (!result) throw new Error('Harvest failed (insufficient energy)')
+          onLog(`🌾 Harvested ${tile.crop || 'wheat'} at (${droneRow}, ${droneCol})`, 'success')
         } else if (['copper_ore', 'iron_ore', 'crystal_ore'].includes(tile.type)) {
           result = getStore().harvestOre(droneRow, droneCol)
-          onLog(result ? `⛏️ Mined ${tile.type} at (${droneRow}, ${droneCol})` : '❌ Mining failed', result ? 'success' : 'error')
+          if (!result) throw new Error('Mining failed (insufficient energy)')
+          onLog(`⛏️ Mined ${tile.type} at (${droneRow}, ${droneCol})`, 'success')
         } else {
-          onLog(`⚠️ Nothing to harvest at (${droneRow}, ${droneCol})`, 'warn')
+          throw new Error(`Nothing to harvest at (${droneRow}, ${droneCol})`)
         }
         await handleActionDelay(signal)
         return result
@@ -129,13 +187,17 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) 
        * drone.plant(cropName) — Plants the specified crop on tilled soil.
        */
       async plant(cropName) {
+        trackLine()
         checkEnergy()
         const { droneRow, droneCol } = getStore()
         const prevCrop = getStore().selectedCrop
         if (cropName) getStore().setSelectedCrop(cropName)
         const result = getStore().plantCrop(droneRow, droneCol)
-        onLog(result ? `🌱 Planted ${cropName || prevCrop} at (${droneRow}, ${droneCol})` : `❌ Can't plant here (need tilled soil & energy)`, result ? 'success' : 'error')
         if (cropName) getStore().setSelectedCrop(prevCrop) // Restore
+        if (!result) {
+          throw new Error(`Can't plant here (need tilled soil & energy)`)
+        }
+        onLog(`🌱 Planted ${cropName || prevCrop} at (${droneRow}, ${droneCol})`, 'success')
         await handleActionDelay(signal)
         return result
       },
@@ -144,10 +206,14 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) 
        * drone.till() — Tills turf at the drone's current tile.
        */
       async till() {
+        trackLine()
         checkEnergy()
         const { droneRow, droneCol } = getStore()
         const result = getStore().tillTile(droneRow, droneCol)
-        onLog(result ? `🪵 Tilled soil at (${droneRow}, ${droneCol})` : `❌ Can't till here (need turf & energy)`, result ? 'success' : 'error')
+        if (!result) {
+          throw new Error(`Can't till here (need turf & energy)`)
+        }
+        onLog(`🪵 Tilled soil at (${droneRow}, ${droneCol})`, 'success')
         await handleActionDelay(signal)
         return result
       },
@@ -156,6 +222,7 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) 
        * drone.moveNext() — Moves the drone to the next tile (left-to-right, top-to-bottom).
        */
       async moveNext() {
+        trackLine()
         checkEnergy()
         const { droneRow, droneCol, unlockedNodes } = getStore()
         const isEfficient = unlockedNodes?.includes('energyEfficiency')
@@ -184,13 +251,14 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) 
        * drone.moveTo(row, col) — Moves the drone to a specific tile.
        */
       async moveTo(row, col) {
-        checkEnergy()
+        trackLine()
         const { droneRow, droneCol, unlockedNodes } = getStore()
         const distance = Math.abs(row - droneRow) + Math.abs(col - droneCol)
         const isEfficient = unlockedNodes?.includes('energyEfficiency')
         const cost = isEfficient ? Math.floor(distance / 2) : distance
         
         if (cost > 0) {
+          checkEnergy()
           const { energy } = getStore()
           if (energy < cost) {
             onLog(`🔌 Not enough energy to move to (${row}, ${col})! (Need ${cost} energy)`, 'error')
@@ -201,8 +269,7 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) 
 
         const gridSize = getStore().grid.length
         if (row < 0 || row >= gridSize || col < 0 || col >= gridSize) {
-          onLog(`❌ Invalid position (${row}, ${col})`, 'error')
-          return
+          throw new Error(`Invalid position (${row}, ${col})`)
         }
         getStore().setDronePosition(row, col)
         onDroneMove(row, col)
@@ -214,7 +281,7 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) 
        * drone.wait(ms) — Waits for the specified duration.
        */
       async wait(ms = 1000) {
-        checkEnergy()
+        trackLine()
         onLog(`⏳ Waiting ${ms}ms...`, 'info')
         await sleep(ms, signal)
       },
@@ -223,6 +290,7 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) 
        * drone.charge() — Recharges the drone at the charging pad.
        */
       async charge() {
+        trackLine()
         const { droneRow, droneCol } = getStore()
         const tile = getStore().grid[droneRow]?.[droneCol]
         if (tile && tile.type === 'charging_station') {
@@ -235,7 +303,7 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) 
           }
           onLog('🔋 Fully charged!', 'success')
         } else {
-          onLog('❌ Cannot charge: Not on the charging station! (moveTo(0,0) first)', 'error')
+          throw new Error('Cannot charge: Not on the charging station! (moveTo(0,0) first)')
         }
         await handleActionDelay(signal)
       }
@@ -248,39 +316,48 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) 
   function buildSensorAPI() {
     return {
       isRipe() {
+        trackLine()
         const { droneRow, droneCol, grid } = getStore()
         return grid[droneRow]?.[droneCol]?.type === 'ripe'
       },
       isSoil() {
+        trackLine()
         const { droneRow, droneCol, grid } = getStore()
         return grid[droneRow]?.[droneCol]?.type === 'soil'
       },
       isTurf() {
+        trackLine()
         const { droneRow, droneCol, grid } = getStore()
         return grid[droneRow]?.[droneCol]?.type === 'turf'
       },
       isOre() {
+        trackLine()
         const { droneRow, droneCol, grid } = getStore()
         const type = grid[droneRow]?.[droneCol]?.type
         return ['copper_ore', 'iron_ore', 'crystal_ore'].includes(type)
       },
       isGrowing() {
+        trackLine()
         const { droneRow, droneCol, grid } = getStore()
         const type = grid[droneRow]?.[droneCol]?.type
         return type === 'seedling' || type === 'growing'
       },
       currentTile() {
+        trackLine()
         const { droneRow, droneCol, grid } = getStore()
         return grid[droneRow]?.[droneCol] || null
       },
       gridSize() {
+        trackLine()
         return getStore().grid.length
       },
       position() {
+        trackLine()
         const { droneRow, droneCol } = getStore()
         return { row: droneRow, col: droneCol }
       },
       getEnergy() {
+        trackLine()
         return getStore().energy
       },
     }
@@ -328,7 +405,13 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange) 
       if (err.name === 'AbortError') {
         onLog('⏹️ Script stopped by user', 'warn')
       } else {
-        onLog(`🔴 Error: ${err.message}`, 'error')
+        const errorLine = getErrorLine(err)
+        if (errorLine !== null && onErrorLine) {
+          onErrorLine(errorLine)
+          onLog(`🔴 Error at Line ${errorLine}: ${err.message}`, 'error')
+        } else {
+          onLog(`🔴 Error: ${err.message}`, 'error')
+        }
       }
     } finally {
       isRunning = false

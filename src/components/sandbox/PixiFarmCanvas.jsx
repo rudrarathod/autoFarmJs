@@ -218,16 +218,23 @@ export default function PixiFarmCanvas({ interactive = true }) {
         }
       })
 
-      // Subscribe to drone position changes to animate the drone sprite
+      // Subscribe to drone position and message changes to animate the drone and update message bubble
       let prevDroneRow = useGameStore.getState().droneRow
       let prevDroneCol = useGameStore.getState().droneCol
+      let prevDroneMessage = useGameStore.getState().droneMessage || 'Idle'
+      
       sandbox.moveDroneTo(prevDroneRow, prevDroneCol)
+      sandbox.updateDroneMessage(prevDroneMessage)
 
       unsubscribeDrone = useGameStore.subscribe((state) => {
         if (state.droneRow !== prevDroneRow || state.droneCol !== prevDroneCol) {
           prevDroneRow = state.droneRow
           prevDroneCol = state.droneCol
           sandbox.moveDroneTo(state.droneRow, state.droneCol)
+        }
+        if (state.droneMessage !== prevDroneMessage) {
+          prevDroneMessage = state.droneMessage || 'Idle'
+          sandbox.updateDroneMessage(prevDroneMessage)
         }
       })
 
@@ -616,18 +623,21 @@ function drawTileSandbox(app, textures, initialGrid, interactive = true) {
       const tileY = gridStartY + row * tileSize + tileSize / 2
       targetDroneX = tileX
       targetDroneY = tileY
+    },
+    updateDroneMessage(msg) {
+      labelText.text = msg
+      labelText.x = -labelText.width / 2
 
-      // Update label based on current tile state
-      const grid = useGameStore.getState().grid
-      const tile = grid[row]?.[col]
-      if (tile) {
-        const status = useGameStore.getState().droneStatus
-        if (status === 'running') {
-          labelText.text = `(${row},${col})`
-        } else {
-          labelText.text = 'Idle'
-        }
-      }
+      const paddingX = 8
+      const paddingY = 2
+      const bgWidth = Math.max(60, labelText.width + paddingX * 2)
+      const bgHeight = 18
+
+      labelBg.clear()
+      labelBg.roundRect(-bgWidth / 2, labelOffsetY - paddingY, bgWidth, bgHeight, 4)
+      labelBg.fill({ color: 0xf4faff })
+      labelBg.setStrokeStyle({ width: 2, color: 0x3c2a21 })
+      labelBg.stroke()
     },
     update(grid) {
       for (let r = 0; r < gridSize; r++) {
