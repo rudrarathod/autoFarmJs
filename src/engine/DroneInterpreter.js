@@ -144,6 +144,13 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
    * Every action is async and includes a delay or pause.
    */
   function buildDroneAPI(signal) {
+    const checkAbort = () => {
+      if (signal?.aborted) {
+        return new Promise(() => {}) // Never resolves, halts user script execution
+      }
+      return null
+    }
+
     const checkEnergy = () => {
       if (signal?.aborted) {
         throw new DOMException('Aborted', 'AbortError')
@@ -160,6 +167,8 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
        * drone.harvest() — Harvests the crop at the drone's current tile.
        */
       async harvest() {
+        const aborted = checkAbort()
+        if (aborted) return aborted
         trackLine()
         checkEnergy()
         const { droneRow, droneCol } = getStore()
@@ -187,6 +196,8 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
        * drone.plant(cropName) — Plants the specified crop on tilled soil.
        */
       async plant(cropName) {
+        const aborted = checkAbort()
+        if (aborted) return aborted
         trackLine()
         checkEnergy()
         const { droneRow, droneCol } = getStore()
@@ -206,6 +217,8 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
        * drone.till() — Tills turf at the drone's current tile.
        */
       async till() {
+        const aborted = checkAbort()
+        if (aborted) return aborted
         trackLine()
         checkEnergy()
         const { droneRow, droneCol } = getStore()
@@ -222,6 +235,8 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
        * drone.moveNext() — Moves the drone to the next tile (left-to-right, top-to-bottom).
        */
       async moveNext() {
+        const aborted = checkAbort()
+        if (aborted) return aborted
         trackLine()
         checkEnergy()
         const { droneRow, droneCol, unlockedNodes } = getStore()
@@ -251,6 +266,8 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
        * drone.moveTo(row, col) — Moves the drone to a specific tile.
        */
       async moveTo(row, col) {
+        const aborted = checkAbort()
+        if (aborted) return aborted
         trackLine()
         const { droneRow, droneCol, unlockedNodes } = getStore()
         const distance = Math.abs(row - droneRow) + Math.abs(col - droneCol)
@@ -281,6 +298,8 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
        * drone.wait(ms) — Waits for the specified duration.
        */
       async wait(ms = 1000) {
+        const aborted = checkAbort()
+        if (aborted) return aborted
         trackLine()
         onLog(`⏳ Waiting ${ms}ms...`, 'info')
         await sleep(ms, signal)
@@ -290,6 +309,8 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
        * drone.charge() — Recharges the drone at the charging pad.
        */
       async charge() {
+        const aborted = checkAbort()
+        if (aborted) return aborted
         trackLine()
         const { droneRow, droneCol } = getStore()
         const tile = getStore().grid[droneRow]?.[droneCol]
@@ -396,7 +417,21 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
       
       const userLog = (msg) => onLog(`📝 ${msg}`, 'info')
       
-      await userScript(drone, sensor, userLog)
+      const abortPromise = new Promise((_, reject) => {
+        const onAbort = () => {
+          reject(new DOMException('Aborted', 'AbortError'))
+        }
+        if (signal.aborted) {
+          onAbort()
+        } else {
+          signal.addEventListener('abort', onAbort)
+        }
+      })
+
+      await Promise.race([
+        userScript(drone, sensor, userLog),
+        abortPromise
+      ])
 
       if (!signal.aborted) {
         onLog('✅ Script completed!', 'success')
