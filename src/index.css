@@ -6,6 +6,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
+@font-face {
+  font-family: 'Silom';
+  src: url('/fonts/SilomBol.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Apply Silom font globally to everything */
+*, *::before, *::after {
+  font-family: 'Silom', sans-serif !important;
+}
+
+/* Preserve JetBrains Mono ONLY for code lines within the editor body */
+.view-line, 
+.view-line *,
+.view-lines, 
+.view-lines * {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.material-symbols-outlined,
+.material-symbols-outlined * {
+  font-family: 'Material Symbols Outlined' !important;
+}
+
 /* ---- CSS Custom Properties (Design Tokens) ---- */
 :root {
   /* Primary */

@@ -2,19 +2,79 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { CROPS, EXPANSION_COSTS } from '../config/assetsConfig.js'
 
-const NODE_PARENTS = {
-  root: null,
-  loops: 'root',
-  variables: 'loops',
-  functions: 'variables',
-  logicPro: 'functions',
-  advancedSensors: 'root',
-  fasterHarvesting: 'advancedSensors',
-  energyEfficiency: 'fasterHarvesting',
-  landExpansion1: 'root',
-  landExpansion2: 'landExpansion1',
-  multiDrone: 'landExpansion2',
+import skillTree from '../config/skillTree.json'
+
+function buildProgressionParents(tree) {
+  const parents = {}
+  parents[tree.id] = []
+
+  function getLeaves(node) {
+    if (node.requireChildren === false) {
+      return [node.id]
+    }
+    if (!node.children || Object.keys(node.children).length === 0) {
+      return [node.id]
+    }
+    let leaves = []
+    Object.values(node.children).forEach(child => {
+      leaves = leaves.concat(getLeaves(child))
+    })
+    return leaves
+  }
+
+  function traverse(node, isSequential = false) {
+    if (node.children) {
+      const childrenKeys = Object.keys(node.children)
+      
+      let layoutMode = node.layout
+      if (!layoutMode) {
+        if (node.id === 'ruralAutomation') {
+          layoutMode = 'parallel'
+        } else if (parents[node.id] && parents[node.id].includes('ruralAutomation')) {
+          layoutMode = 'sequential'
+        } else {
+          layoutMode = 'parallel'
+        }
+      }
+
+      if (layoutMode === 'sequential') {
+        let prevNodeIds = [node.id]
+        childrenKeys.forEach(key => {
+          const child = node.children[key]
+          parents[child.id] = child.parents || [...prevNodeIds]
+          traverse(child, child.layout === 'sequential')
+          prevNodeIds = getLeaves(child)
+        })
+      } else {
+        childrenKeys.forEach(key => {
+          const child = node.children[key]
+          parents[child.id] = child.parents || [node.id]
+          traverse(child, child.layout === 'sequential')
+        })
+      }
+    }
+  }
+
+  traverse(tree)
+  return parents
 }
+
+const NODE_PARENTS = buildProgressionParents(skillTree)
+
+function findNodeXpCosts(node) {
+  const costs = {}
+  function traverse(n) {
+    if (n.xpCost !== undefined) {
+      costs[n.id] = n.xpCost
+    }
+    if (n.children) {
+      Object.values(n.children).forEach(child => traverse(child))
+    }
+  }
+  traverse(node)
+  return costs
+}
+const NODE_XP_COSTS = findNodeXpCosts(skillTree)
 
 const INITIAL_GRID = [
   [{ type: 'charging_station', baseType: 'charging_station' }, { type: 'turf' }, { type: 'growing', crop: 'wheat', progress: 50 }],
@@ -88,7 +148,7 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
       isHelpOpen: false,
 
       // --- Tech Tree Unlocks ---
-      unlockedNodes: ['root', 'loops'], // Default unlocked logic nodes
+      unlockedNodes: ['ruralAutomation', 'programming', 'movement', 'farmingActions'], // Default unlocked logic nodes
 
       // --- Actions ---
       zoomIn: () => set((state) => ({ zoom: Math.min(2.0, (state.zoom || 1.0) + 0.15) })),
@@ -146,14 +206,23 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
         return true
       },
 
-      // Checks status of a node dynamically: 'unlocked' | 'reachable' | 'locked'
       getNodeStatus: (nodeId) => {
-        const { unlockedNodes } = get()
-        if (unlockedNodes.includes(nodeId)) {
+        // If a node has no xpCost, it is a title/header card and is unlocked by default
+        if (NODE_XP_COSTS[nodeId] === undefined) {
           return 'unlocked'
         }
-        const parentId = NODE_PARENTS[nodeId]
-        if (parentId === null || unlockedNodes.includes(parentId)) {
+        const { unlockedNodes } = get()
+        if (nodeId === 'ruralAutomation' || unlockedNodes.includes(nodeId)) {
+          return 'unlocked'
+        }
+        const parentIds = NODE_PARENTS[nodeId]
+        if (!parentIds || parentIds.length === 0) {
+          return 'reachable'
+        }
+        const areAllParentsUnlocked = parentIds.every(pId => 
+          pId === 'ruralAutomation' || get().getNodeStatus(pId) === 'unlocked'
+        )
+        if (areAllParentsUnlocked) {
           return 'reachable'
         }
         return 'locked'
@@ -178,11 +247,11 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
         })
 
         // Apply global effects based on unlocked upgrades
-        if (nodeId === 'fasterHarvesting') {
-          set({ droneSpeedMultiplier: 1.25 })
+        if (nodeId === 'fasterMovement') {
+          set({ droneSpeedMultiplier: 1.35 })
         } else if (nodeId === 'energyEfficiency') {
           // Reduces energy costs (handled during operations)
-        } else if (nodeId === 'landExpansion1') {
+        } else if (nodeId === 'largerBattery') {
           get().upgradeMaxEnergy(50)
         }
 
@@ -433,7 +502,7 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
         },
         selectedCrop: 'wheat',
         grid: INITIAL_GRID,
-        unlockedNodes: ['root', 'loops'],
+        unlockedNodes: ['ruralAutomation', 'programming', 'movement', 'farmingActions'],
         zoom: 1.0,
         droneRow: 0,
         droneCol: 0,
@@ -444,7 +513,7 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
       })
     }),
     {
-      name: 'rural-automation-save-v3', // Storage key name
+      name: 'rural-automation-save-v4', // Storage key name
       partialize: (state) => {
         const { droneStatus, isHelpOpen, droneMessage, ...rest } = state
         return rest

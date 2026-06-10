@@ -258,7 +258,7 @@ export default function PixiFarmCanvas({ interactive = true }) {
         app.destroy(true, { children: true })
       }
     }
-  }, [gridSize])
+  }, [gridSize, interactive])
 
   return (
     <div className="pixi-farm-canvas bg-grid-pattern" ref={canvasRef}>
@@ -480,7 +480,7 @@ function drawTileSandbox(app, textures, initialGrid, interactive = true) {
       let pText = null
       if (interactive) {
         const textStyle = new TextStyle({
-          fontFamily: 'JetBrains Mono',
+          fontFamily: 'Silom',
           fontSize: 12,
           fill: 0xffffff,
           fontWeight: 'bold',
@@ -556,7 +556,7 @@ function drawTileSandbox(app, textures, initialGrid, interactive = true) {
   droneContainer.addChild(labelBg)
 
   const labelStyle = new TextStyle({
-    fontFamily: 'JetBrains Mono',
+    fontFamily: 'Silom',
     fontSize: 9,
     fill: 0x006e1c,
     fontWeight: '500',

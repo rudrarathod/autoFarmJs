@@ -1,0 +1,287 @@
+{
+  "id": "ruralAutomation",
+  "name": "Rural Automation",
+  "icon": "agriculture",
+  "color": "#10B981",
+  "description": "The foundation of all agricultural robotics and sequential control logic.",
+  "children": {
+    "programming": {
+      "id": "programming",
+      "name": "Programming",
+      "icon": "code",
+      "color": "#4F46E5",
+      "description": "Unlock logic controls and software development capabilities.",
+      "children": {
+        "movement": {
+          "id": "movement",
+          "name": "Movement",
+          "icon": "navigation",
+          "xpCost": 150,
+          "description": "Basic navigation instructions: moveNorth, moveSouth, moveEast, moveWest."
+        },
+        "farmingActions": {
+          "id": "farmingActions",
+          "name": "Farming Actions",
+          "icon": "agriculture",
+          "xpCost": 300,
+          "description": "Fundamental agrarian commands: till(), plant(), and harvest()."
+        },
+        "loops": {
+          "id": "loops",
+          "name": "Loops",
+          "icon": "all_inclusive",
+          "xpCost": 600,
+          "description": "Unlock loops structure to repeat instructions autonomously.",
+          "layout": "parallel",
+          "requireChildren": false,
+          "children": {
+            "forLoops": {
+              "id": "forLoops",
+              "name": "For Loops",
+              "icon": "repeat",
+              "xpCost": 800,
+              "description": "Execute a block of code a set number of times using for-loops."
+            },
+            "whileLoops": {
+              "id": "whileLoops",
+              "name": "While Loops",
+              "icon": "loop",
+              "xpCost": 800,
+              "description": "Execute code continuously while a condition remains true."
+            }            
+          }
+        },
+        "variables": {
+          "id": "variables",
+          "name": "Variables",
+          "icon": "data_object",
+          "xpCost": 1200,
+          "description": "Store and recall states in named memory variables.",
+          "children": {
+            "basicVariables": {
+              "id": "basicVariables",
+              "name": "Basic Variables",
+              "icon": "data_object",
+              "xpCost": 150,
+              "description": "Store and recall states in named memory variables."
+            },
+            "advancedVariables": {
+              "id": "advancedVariables",
+              "name": "Advanced Variables",
+              "icon": "data_object",
+              "xpCost": 300,
+              "description": "Store and recall states in named memory variables."
+            }
+          }
+        },
+        "ifStatements": {
+          "id": "ifStatements",
+          "name": "If Statements",
+          "icon": "fork_right",
+          "xpCost": 2000,
+          "description": "Introduce conditional logic and decision-making filters."
+        },
+        "sensors": {
+          "id": "sensors",
+          "name": "Sensors",
+          "icon": "sensors",
+          "xpCost": 3000,
+          "description": "Detect crop growth stages, ground types, and moisture levels."
+        },
+        "functions": {
+          "id": "functions",
+          "name": "Functions",
+          "icon": "functions",
+          "xpCost": 4000,
+          "description": "Write custom, parameterized, and reusable blocks of code."
+        },
+        "arrays": {
+          "id": "arrays",
+          "name": "Arrays",
+          "icon": "view_list",
+          "xpCost": 5000,
+          "parents": ["advancedVariables","functions"],
+          "description": "Organize ordered collections of coordinates or inventory data."
+        },
+        "objects": {
+          "id": "objects",
+          "name": "Objects",
+          "icon": "category",
+          "xpCost": 7500,
+          "description": "Map key-value properties to group related parameters."
+        },
+        "events": {
+          "id": "events",
+          "name": "Events",
+          "icon": "bolt",
+          "xpCost": 10000,
+          "description": "Trigger automated drone scripts based on real-time grid changes."
+        }
+      }
+    },
+    "efficiency": {
+      "id": "efficiency",
+      "name": "Efficiency",
+      "icon": "speed",
+      "color": "#10B981",
+      "description": "Calibrate systems to decrease battery drain and boost speed.",
+      "children": {
+        "batteryTech": {
+          "id": "batteryTech",
+          "name": "Battery Tech",
+          "icon": "battery_charging_full",
+          "xpCost": 150,
+          "description": "Re-engineered energy grid: increase maximum drone battery capacity.",
+          "children": {
+            "fasterMovement": {
+              "id": "fasterMovement",
+              "name": "Faster Movement",
+              "icon": "directions_run",
+              "xpCost": 300,
+              "description": "Calibrate thruster outputs for faster grid navigation."
+            },
+            "energyEfficiency": {
+              "id": "energyEfficiency",
+              "name": "Energy Efficiency",
+              "icon": "eco",
+              "xpCost": 600,
+              "description": "Highly optimized actuators: reduce action energy requirements."
+            }
+          }
+        },
+        "advancedEfficiency": {
+          "id": "advancedEfficiency",
+          "name": "Advanced Efficiency",
+          "icon": "rocket_launch",
+          "xpCost": 1200,
+          "description": "State-of-the-art power distribution and recharge rates."
+        }
+      }
+    },
+    "expansion": {
+      "id": "expansion",
+      "name": "Expansion",
+      "icon": "grid_view",
+      "color": "#F59E0B",
+      "description": "Expand the boundaries of your operations and resource reserves.",
+      "children": {
+        "largerBattery": {
+          "id": "largerBattery",
+          "name": "Larger Battery",
+          "icon": "battery_6_bar",
+          "xpCost": 150,
+          "description": "Enlarge drone energy reserve tank size."
+        },
+        "expansion4x4": {
+          "id": "expansion4x4",
+          "name": "4x4 Expansion",
+          "icon": "crop_square",
+          "xpCost": 300,
+          "description": "Clear debris and expand the active farming field to a 4x4 grid."
+        },
+        "expansion5x5": {
+          "id": "expansion5x5",
+          "name": "5x5 Expansion",
+          "icon": "grid_on",
+          "xpCost": 600,
+          "description": "Bridge the stream to secure a larger 5x5 farming layout."
+        },
+        "expansion6x6": {
+          "id": "expansion6x6",
+          "name": "6x6 Expansion",
+          "icon": "dashboard",
+          "xpCost": 1200,
+          "description": "Maximum grid layout: optimize all 36 farming sectors."
+        }
+      }
+    },
+    "farming": {
+      "id": "farming",
+      "name": "Farming",
+      "icon": "grass",
+      "color": "#84CC16",
+      "description": "Unlock advanced seed varieties and organic crops.",
+      "children": {
+        "wheat": {
+          "id": "wheat",
+          "name": "Wheat",
+          "icon": "grass",
+          "xpCost": 150,
+          "description": "Basic wheat crops: easy to cultivate, stable yield."
+        },
+        "carrot": {
+          "id": "carrot",
+          "name": "Carrot",
+          "icon": "compost",
+          "xpCost": 300,
+          "description": "Nutrient-rich root crop yielding moderate XP."
+        },
+        "beetroot": {
+          "id": "beetroot",
+          "name": "Beetroot",
+          "icon": "yard",
+          "xpCost": 600,
+          "description": "Sweet beetroots: required for advanced energy extraction."
+        },
+        "potato": {
+          "id": "potato",
+          "name": "Potato",
+          "icon": "agriculture",
+          "xpCost": 1200,
+          "description": "Grow potato tubers with a high XP payout."
+        },
+        "watermelon": {
+          "id": "watermelon",
+          "name": "Watermelon",
+          "icon": "emoji_food_beverage",
+          "xpCost": 2000,
+          "description": "Elite melon blocks with substantial XP and energy value."
+        }
+      }
+    },
+    "automation": {
+      "id": "automation",
+      "name": "Automation",
+      "icon": "smart_toy",
+      "color": "#EF4444",
+      "description": "Master advanced automated grid operations and roles.",
+      "children": {
+        "taskScheduler": {
+          "id": "taskScheduler",
+          "name": "Task Scheduler",
+          "icon": "schedule",
+          "xpCost": 150,
+          "description": "Queue autonomous commands with delays and priorities."
+        },
+        "sharedStorage": {
+          "id": "sharedStorage",
+          "name": "Shared Storage",
+          "icon": "inventory_2",
+          "xpCost": 300,
+          "description": "Drones can interact with a central barn to store/retrieve resources."
+        },
+        "droneRoles": {
+          "id": "droneRoles",
+          "name": "Drone Roles",
+          "icon": "badge",
+          "xpCost": 600,
+          "description": "Assign custom operational roles and behaviors to your drone array."
+        },
+        "multiDroneControl": {
+          "id": "multiDroneControl",
+          "name": "Multi Drone Control",
+          "icon": "groups",
+          "xpCost": 1200,
+          "description": "Deploy and coordinate multiple drones concurrently."
+        },
+        "automationMastery": {
+          "id": "automationMastery",
+          "name": "Automation Mastery",
+          "icon": "psychology",
+          "xpCost": 2000,
+          "description": "Achieve self-sustaining autonomous farming operations."
+        }
+      }
+    }
+  }
+}

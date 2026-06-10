@@ -20,6 +20,7 @@ export default function SandboxPage() {
 
   const [showExpandConfirm, setShowExpandConfirm] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [isTouchInteractive, setIsTouchInteractive] = useState(true)
 
   return (
     <div className="sandbox-page">
@@ -30,7 +31,7 @@ export default function SandboxPage() {
       <div className="sandbox-page__workspace">
         {/* Farm Canvas with floating tools */}
         <div className="sandbox-page__canvas-area">
-          <PixiFarmCanvas />
+          <PixiFarmCanvas interactive={isTouchInteractive} />
 
           {/* Floating Crop Selector Bar */}
           <div className="sandbox-page__crop-selector pixel-border top-light-inset">
@@ -99,6 +100,13 @@ export default function SandboxPage() {
 
           {/* Floating Mobile Tools */}
           <div className="sandbox-page__canvas-tools">
+            <button 
+              className={`sandbox-page__tool-btn pixel-border btn-press ${!isTouchInteractive ? 'sandbox-page__tool-btn--disabled' : ''}`}
+              onClick={() => setIsTouchInteractive(!isTouchInteractive)}
+              title={isTouchInteractive ? "Disable Touch Interaction" : "Enable Touch Interaction"}
+            >
+              <MaterialIcon icon={isTouchInteractive ? "touch_app" : "do_not_touch"} />
+            </button>
             <button 
               className="sandbox-page__tool-btn pixel-border btn-press"
               onClick={() => useGameStore.getState().zoomIn()}

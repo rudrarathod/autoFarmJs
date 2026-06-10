@@ -43,6 +43,11 @@
   border: none;
 }
 
+.sandbox-page__tool-btn--disabled {
+  background-color: var(--color-error-container, #ffdad6) !important;
+  color: var(--color-error, #ba1a1a) !important;
+}
+
 /* Crop Selector Bar */
 .sandbox-page__crop-selector {
   position: absolute;
