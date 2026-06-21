@@ -4,11 +4,18 @@ import HomePage from './pages/HomePage.jsx'
 import SandboxPage from './pages/SandboxPage.jsx'
 import ProgressTreePage from './pages/ProgressTreePage.jsx'
 import HelpManualModal from './components/common/HelpManualModal.jsx'
+import SettingsPanelModal from './components/common/SettingsPanelModal.jsx'
 import SplashScreen from './components/splash/SplashScreen.jsx'
 import { useGameStore } from './store/gameStore.js'
 
 export default function App() {
   const [assetsReady, setAssetsReady] = useState(false)
+  const colorTheme = useGameStore((s) => s.settings?.colorTheme || 'solar-punk')
+
+  // Apply color theme class dynamically to HTML element
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', colorTheme)
+  }, [colorTheme])
 
   // Passive drone energy recharge loop (3 energy every 2 seconds)
   useEffect(() => {
@@ -35,6 +42,7 @@ export default function App() {
         <Route path="/progress-tree" element={<ProgressTreePage />} />
       </Routes>
       <HelpManualModal />
+      <SettingsPanelModal />
     </>
   )
 }

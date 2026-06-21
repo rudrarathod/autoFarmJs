@@ -110,13 +110,13 @@ export default function HelpManualModal() {
                 <div className="help-manual-grid">
                   <div className="help-manual-feature-box">
                     <h3>🌾 Crop Cycle</h3>
-                    <p style={{ fontSize: '13px', margin: 0 }}>
+                    <p style={{ fontSize: '15px', margin: 0 }}>
                       Soil starts as <strong>Turf</strong>. Use the drone to <strong>Till</strong> it into soil, plant seeds, and wait for crops to grow. Harvest crops when they are <strong>Ripe</strong> to earn wheat and XP!
                     </p>
                   </div>
                   <div className="help-manual-feature-box">
                     <h3>🚀 Expanding Grid</h3>
-                    <p style={{ fontSize: '13px', margin: 0 }}>
+                    <p style={{ fontSize: '15px', margin: 0 }}>
                       Spend harvested crops to buy <strong>Grid Expansions</strong> (e.g. 4x4, 5x5, etc.) in the side panel. Larger grid sizes yield more resources but require smarter pathing!
                     </p>
                   </div>
@@ -301,13 +301,13 @@ export default function HelpManualModal() {
                 <div className="help-manual-grid">
                   <div className="help-manual-feature-box">
                     <h3>🔌 Energy Limits & Cost</h3>
-                    <p style={{ fontSize: '13px', margin: 0 }}>
+                    <p style={{ fontSize: '15px', margin: 0 }}>
                       The drone has a 100% capacity limit. Moving cost is 1 energy per tile (based on Manhattan distance). Operations like tilling, mining, and harvesting cost 5 energy each.
                     </p>
                   </div>
                   <div className="help-manual-feature-box">
                     <h3>🏡 Recharging</h3>
-                    <p style={{ fontSize: '13px', margin: 0 }}>
+                    <p style={{ fontSize: '15px', margin: 0 }}>
                       Coordinates <strong>(0,0)</strong> is home to a permanent metallic <strong>Charging Pad</strong>. Move there and call <code>await drone.charge()</code> in your script to recharge.
                     </p>
                   </div>
@@ -320,7 +320,7 @@ export default function HelpManualModal() {
                   If the drone runs completely out of energy, execution halts and the engine throws an error. 
                   Always write a check in your script to inspect current energy level and return to charge:
                 </p>
-                <pre style={{ background: '#11111b', padding: '12px', borderRadius: '6px', fontFamily: 'JetBrains Mono', fontSize: '12px', color: '#f5c2e7' }}>
+                <pre style={{ background: '#11111b', padding: '12px', borderRadius: '6px', fontFamily: 'JetBrains Mono', fontSize: '15px', color: '#f5c2e7' }}>
 {`if (sensor.getEnergy() < 15) {
   log("🔋 Returning to base!");
   await drone.moveTo(0, 0);

@@ -46,7 +46,10 @@ export default function SideNav() {
         </a>
 
         {/* Settings */}
-        <a className="side-nav__link btn-press" href="#">
+        <a 
+          className="side-nav__link btn-press" 
+          onClick={() => useGameStore.getState().setSettingsOpen(true)}
+        >
           <MaterialIcon icon="settings" className="side-nav__link-icon side-nav__link-icon--primary" />
           <span className="font-body-lg">Settings</span>
         </a>

@@ -17,6 +17,7 @@ export default function DroneLogicPanel() {
   const droneSpeedMultiplier = useGameStore((s) => s.droneSpeedMultiplier || 1.0)
   const setDroneScript = useGameStore((s) => s.setDroneScript)
   const setDroneSpeedMultiplier = useGameStore((s) => s.setDroneSpeedMultiplier)
+  const editorTheme = useGameStore((s) => s.settings?.editorTheme || 'drone-dark')
 
   const [activeTab, setActiveTab] = useState('editor') // 'editor' | 'console'
   const runnerRef = useRef(null)
@@ -213,7 +214,7 @@ export default function DroneLogicPanel() {
         'editorSuggestWidget.selectedBackground': '#3e4451',
       },
     })
-    monaco.editor.setTheme('drone-dark')
+    monaco.editor.setTheme(editorTheme)
 
     // Register drone API autocomplete
     monaco.languages.registerCompletionItemProvider('javascript', {
@@ -321,6 +322,7 @@ export default function DroneLogicPanel() {
             defaultValue={useGameStore.getState().droneScript || ''}
             onChange={handleEditorChange}
             onMount={handleEditorMount}
+            theme={editorTheme}
             options={{
               fontSize: 13,
               fontFamily: "'JetBrains Mono', monospace",

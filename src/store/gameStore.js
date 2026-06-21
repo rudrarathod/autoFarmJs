@@ -146,6 +146,16 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
       droneConsole: [], // Array of { text, type, id }
       droneMessage: 'Idle',
       isHelpOpen: false,
+      isSettingsOpen: false,
+      settings: {
+        volumeMaster: 80,
+        volumeBgm: 70,
+        volumeSfx: 70,
+        mute: false,
+        gridOverlay: true,
+        editorTheme: 'drone-dark',
+        colorTheme: 'solar-punk'
+      },
 
       // --- Tech Tree Unlocks ---
       unlockedNodes: ['ruralAutomation', 'programming', 'movement', 'farmingActions'], // Default unlocked logic nodes
@@ -164,6 +174,8 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
       setDroneMessage: (msg) => set({ droneMessage: msg }),
       setDroneSpeedMultiplier: (multiplier) => set({ droneSpeedMultiplier: multiplier }),
       setHelpOpen: (isOpen) => set({ isHelpOpen: isOpen }),
+      setSettingsOpen: (isOpen) => set({ isSettingsOpen: isOpen }),
+      updateSetting: (key, val) => set((state) => ({ settings: { ...state.settings, [key]: val } })),
       addDroneLog: (text, type = 'info') => set((state) => ({
         droneConsole: [...state.droneConsole.slice(-50), { text, type, id: Date.now() }],
         droneMessage: text
@@ -509,13 +521,14 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
         droneStatus: 'idle',
         droneConsole: [],
         droneMessage: 'Idle',
-        isHelpOpen: false
+        isHelpOpen: false,
+        isSettingsOpen: false
       })
     }),
     {
       name: 'rural-automation-save-v4', // Storage key name
       partialize: (state) => {
-        const { droneStatus, isHelpOpen, droneMessage, ...rest } = state
+        const { droneStatus, isHelpOpen, droneMessage, isSettingsOpen, ...rest } = state
         return rest
       }
     }

@@ -7,23 +7,47 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 @font-face {
-  font-family: 'Silom';
-  src: url('/fonts/SilomBol.ttf') format('truetype');
+  font-family: 'Pixel Operator';
+  src: url('/fonts/pixel_operator/PixelOperator.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Pixel Operator';
+  src: url('/fonts/pixel_operator/PixelOperator-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Pixel Operator Mono';
+  src: url('/fonts/pixel_operator/PixelOperatorMono.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
 
-/* Apply Silom font globally to everything */
-*, *::before, *::after {
-  font-family: 'Silom', sans-serif !important;
+@font-face {
+  font-family: 'Pixel Operator Mono';
+  src: url('/fonts/pixel_operator/PixelOperatorMono-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
 }
 
-/* Preserve JetBrains Mono ONLY for code lines within the editor body */
+/* Apply Pixel Operator globally to all readable text, titles, HUD, buttons, panels */
+*, *::before, *::after {
+  font-family: 'Pixel Operator', sans-serif !important;
+}
+
+/* Preserve Pixel Operator Mono ONLY for code lines within the editor body and logs */
 .view-line, 
 .view-line *,
 .view-lines, 
-.view-lines * {
-  font-family: 'JetBrains Mono', monospace !important;
+.view-lines *,
+.drone-logic-panel__console-lines,
+.drone-logic-panel__console-lines *,
+code, pre {
+  font-family: 'Pixel Operator Mono', monospace !important;
 }
 
 .material-symbols-outlined,
@@ -302,4 +326,80 @@ body {
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* ---- Visual Themes ---- */
+
+/* 1. Solar Punk (Default) - Standard root variables are used */
+
+/* 2. Cyber Punk Theme */
+[data-theme='cyber-punk'] {
+  --color-primary: #ff007f;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #b30059;
+  --color-on-primary-container: #ffffff;
+  --color-secondary: #00f0ff;
+  --color-on-secondary: #000000;
+  --color-secondary-container: #008080;
+  --color-on-secondary-container: #ffffff;
+  --color-surface: #0a051d;
+  --color-on-surface: #00ffff;
+  --color-surface-container-low: #120935;
+  --color-surface-container: #180d45;
+  --color-surface-container-high: #241468;
+  --color-background: #050212;
+  --color-on-background: #ff007f;
+  --color-ui-bg-paper: #180d45;
+  --color-soil-dark: #00ffff;
+  --color-outline: #ff007f;
+  --color-meadow-green: #00ff66;
+  --color-harvest-amber: #ffcc00;
+}
+
+/* 3. Classic Amber CRT Theme */
+[data-theme='classic-amber'] {
+  --color-primary: #ffb000;
+  --color-on-primary: #000000;
+  --color-primary-container: #805800;
+  --color-on-primary-container: #ffb000;
+  --color-secondary: #ffb000;
+  --color-on-secondary: #000000;
+  --color-secondary-container: #4c3500;
+  --color-on-secondary-container: #ffb000;
+  --color-surface: #0a0700;
+  --color-on-surface: #ffb000;
+  --color-surface-container-low: #150f00;
+  --color-surface-container: #201600;
+  --color-surface-container-high: #302100;
+  --color-background: #000000;
+  --color-on-background: #ffb000;
+  --color-ui-bg-paper: #150f00;
+  --color-soil-dark: #ffb000;
+  --color-outline: #ffb000;
+  --color-meadow-green: #ffb000;
+  --color-harvest-amber: #ffb000;
+}
+
+/* 4. Alabaster Light Theme */
+[data-theme='alabaster-light'] {
+  --color-primary: #2e5a27;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #81c784;
+  --color-on-primary-container: #1b3517;
+  --color-secondary: #1976d2;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #90caf9;
+  --color-on-secondary-container: #0d47a1;
+  --color-surface: #ffffff;
+  --color-on-surface: #1b2e1a;
+  --color-surface-container-low: #f1f8e9;
+  --color-surface-container: #e8f5e9;
+  --color-surface-container-high: #c8e6c9;
+  --color-background: #f1f8e9;
+  --color-on-background: #1b2e1a;
+  --color-ui-bg-paper: #ffffff;
+  --color-soil-dark: #2e5a27;
+  --color-outline: #558b2f;
+  --color-meadow-green: #4caf50;
+  --color-harvest-amber: #fbc02d;
 }

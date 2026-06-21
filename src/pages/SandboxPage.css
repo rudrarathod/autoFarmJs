@@ -67,7 +67,7 @@
 .sandbox-page__selector-title {
   color: #3c2a21;
   font-weight: 800;
-  font-size: 11px;
+  font-size: 15px;
   letter-spacing: 0.8px;
   font-family: 'JetBrains Mono', monospace;
 }
@@ -103,13 +103,13 @@
 }
 
 .crop-btn-name {
-  font-size: 9px;
+  font-size: 15px;
   font-weight: 800;
   font-family: 'JetBrains Mono', monospace;
 }
 
 .crop-btn-cost {
-  font-size: 8px;
+  font-size: 15px;
   font-family: 'JetBrains Mono', monospace;
   margin-top: 1px;
   opacity: 0.9;
@@ -142,7 +142,7 @@
 .sandbox-page__inventory-title {
   color: #3c2a21;
   font-weight: 800;
-  font-size: 11px;
+  font-size: 15px;
   letter-spacing: 0.8px;
   font-family: 'JetBrains Mono', monospace;
   border-bottom: 2px solid rgba(60, 42, 33, 0.12);
@@ -174,7 +174,7 @@
 }
 
 .sandbox-page__inventory-count {
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
   color: #3c2a21;
 }
@@ -182,7 +182,7 @@
 .sandbox-page__expand-btn {
   width: 100%;
   padding: 6px;
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 800;
   color: #ffffff;
   background-color: var(--color-meadow-green);

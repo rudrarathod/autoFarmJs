@@ -1,6 +1,19 @@
 import { Handle, Position } from '@xyflow/react'
 import './TreeNode.css'
 import MaterialIcon from '../common/MaterialIcon.jsx'
+import skillTree from '../../config/skillTree.json'
+import { useGameStore } from '../../store/gameStore.js'
+
+// Pre-build a lookup registry for parent name lookups
+const flatNodes = {}
+function flatten(node) {
+  if (!node) return
+  flatNodes[node.id] = { name: node.name, xpCost: node.xpCost }
+  if (node.children) {
+    Object.values(node.children).forEach(flatten)
+  }
+}
+flatten(skillTree)
 
 /**
  * TreeNode - Custom React Flow Node representing a tech unlock.
@@ -15,7 +28,10 @@ export default function TreeNode({ data }) {
     xpCost,
     onUnlock,
     color, // branch color (hex)
+    parents,
   } = data
+
+  const unlockedNodes = useGameStore((state) => state.unlockedNodes)
 
   const isUnlocked = status === 'unlocked'
   const isReachable = status === 'reachable'
@@ -139,8 +155,48 @@ export default function TreeNode({ data }) {
 
       {/* Hover Info Tooltip */}
       {description && (
-        <div className="tree-node__tooltip pixel-border top-light-inset font-label-tech">
-          <p className="tree-node__tooltip-text">{description}</p>
+        <div className="tree-node__tooltip pixel-border top-light-inset">
+          <div className="tree-node__tooltip-header">
+            <span className="tree-node__tooltip-title">{title}</span>
+            <span 
+              className={`tree-node__tooltip-status tree-node__tooltip-status--${status}`}
+              style={{ color: status === 'unlocked' ? '#4caf50' : status === 'reachable' ? '#ff9800' : '#a0a0a0' }}
+            >
+              {status === 'unlocked' ? 'UNLOCKED' : status === 'reachable' ? 'AVAILABLE' : 'LOCKED'}
+            </span>
+          </div>
+
+          <div className="tree-node__tooltip-divider" />
+
+          <p className="tree-node__tooltip-desc">{description}</p>
+
+          {parents && parents.length > 0 && (
+            <div className="tree-node__tooltip-prereqs">
+              <span className="tree-node__tooltip-section-title">PREREQUISITES</span>
+              <div className="tree-node__tooltip-prereq-list">
+                {parents.map(pId => {
+                  const pName = flatNodes[pId]?.name || pId
+                  const isParentUnlocked = pId === 'ruralAutomation' || unlockedNodes.includes(pId) || flatNodes[pId]?.xpCost === undefined
+                  return (
+                    <div key={pId} className="tree-node__tooltip-prereq-item">
+                      <span className="tree-node__tooltip-prereq-status">{isParentUnlocked ? '✅' : '❌'}</span>
+                      <span className={isParentUnlocked ? 'tree-node__tooltip-prereq-name--unlocked' : 'tree-node__tooltip-prereq-name--locked'}>{pName}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {xpCost !== undefined && (
+            <div className="tree-node__tooltip-cost">
+              <span className="tree-node__tooltip-section-title">UNLOCK COST</span>
+              <div className="tree-node__tooltip-cost-row">
+                <MaterialIcon icon="star" filled size="12px" style={{ color: color || '#ff9800' }} />
+                <span className="tree-node__tooltip-cost-val font-label-tech">{xpCost.toLocaleString()} XP</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

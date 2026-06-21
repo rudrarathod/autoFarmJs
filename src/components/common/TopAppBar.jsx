@@ -44,7 +44,10 @@ export default function TopAppBar({ activeTab = 'farm', showTabs = true }) {
 
       <div className="top-app-bar__right">
         <HudStats />
-        <button className="top-app-bar__action">
+        <button 
+          className="top-app-bar__action"
+          onClick={() => useGameStore.getState().setSettingsOpen(true)}
+        >
           <MaterialIcon icon="settings" />
         </button>
         <button className="top-app-bar__action" onClick={() => setHelpOpen(true)}>

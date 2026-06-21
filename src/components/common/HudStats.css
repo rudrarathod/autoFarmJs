@@ -5,7 +5,7 @@
   background-color: var(--color-surface-container-low);
   padding: 8px 16px;
   border-radius: var(--radius-lg);
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .hud-stat {
@@ -20,7 +20,7 @@
 
 .hud-stat-value {
   color: var(--color-on-surface);
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .hud-divider {

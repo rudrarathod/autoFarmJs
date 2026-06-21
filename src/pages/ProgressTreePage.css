@@ -60,7 +60,7 @@
   padding: 10px 20px;
   z-index: 999;
   font-family: 'Outfit', sans-serif;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   text-align: center;
   border-radius: var(--radius-default, 8px);
@@ -96,3 +96,217 @@
     opacity: 1;
   }
 }
+
+/* ---- Node Info Side Panel ---- */
+.progress-tree-page__side-panel {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 380px;
+  bottom: 24px;
+  background-color: #fbf6ef; /* Parchment cream */
+  color: #3c2a21; /* Dark wood brown */
+  border: 4px solid #3c2a21;
+  border-radius: var(--radius-default, 8px);
+  box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  overflow: hidden;
+  animation: slide-in-panel 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slide-in-panel {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.progress-tree-side-panel__header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f3ede2;
+  border-bottom: 4px solid #3c2a21;
+}
+
+.progress-tree-side-panel__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.progress-tree-side-panel__title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: #3c2a21;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.progress-tree-side-panel__close-btn {
+  background-color: #e8dcc4;
+  border: 2px solid #3c2a21;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  transition: transform 0.1s ease;
+}
+
+.progress-tree-side-panel__close-btn:hover {
+  background-color: #ded1b5;
+}
+
+.progress-tree-side-panel__content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.progress-tree-side-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progress-tree-side-panel__section-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #8d6e63;
+  text-transform: uppercase;
+}
+
+.progress-tree-side-panel__status {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 16px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 50px;
+  border: 2px solid currentColor;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.progress-tree-side-panel__desc {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #5d4037;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.progress-tree-side-panel__prereqs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 2px dashed rgba(60, 42, 33, 0.2);
+}
+
+.progress-tree-side-panel__prereq-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.progress-tree-side-panel__prereq-item .unlocked {
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.progress-tree-side-panel__prereq-item .locked {
+  color: #c62828;
+  font-weight: 700;
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+
+.progress-tree-side-panel__cost-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 2px dashed rgba(60, 42, 33, 0.2);
+  align-self: flex-start;
+}
+
+.progress-tree-side-panel__footer {
+  padding: 16px 20px;
+  background-color: #f3ede2;
+  border-top: 4px solid #3c2a21;
+  display: flex;
+}
+
+.progress-tree-side-panel__btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+  border-radius: var(--radius-default, 8px);
+  border: 3px solid #3c2a21;
+  cursor: pointer;
+  transition: transform 0.05s ease;
+}
+
+.progress-tree-side-panel__btn:disabled {
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.progress-tree-side-panel__btn--unlocked {
+  background-color: #e0f2f1;
+  color: #00796b;
+  border-color: #004d40;
+}
+
+.progress-tree-side-panel__btn--locked {
+  background-color: #eceff1;
+  color: #78909c;
+  border-color: #cfd8dc;
+}
+
+.progress-tree-side-panel__btn--unlock {
+  color: #fff;
+  box-shadow: 0 4px 0 0 #2e1e19;
+}
+
+.progress-tree-side-panel__btn--unlock:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 0 #2e1e19;
+}
+
+/* Responsive side panel on mobile */
+@media (max-width: 767px) {
+  .progress-tree-page__side-panel {
+    top: auto;
+    right: 16px;
+    left: 16px;
+    bottom: 96px;
+    width: auto;
+    max-height: 45vh;
+  }
+}
+

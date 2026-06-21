@@ -6,7 +6,19 @@ import TopAppBar from '../components/common/TopAppBar.jsx'
 import BottomNavBar from '../components/common/BottomNavBar.jsx'
 import TreeNode from '../components/progress/TreeNode.jsx'
 import { useGameStore } from '../store/gameStore.js'
+import MaterialIcon from '../components/common/MaterialIcon.jsx'
 import skillTree from '../config/skillTree.json'
+
+// Pre-build a lookup registry for parent name lookups
+const flatNodes = {}
+function flatten(node) {
+  if (!node) return
+  flatNodes[node.id] = { name: node.name, xpCost: node.xpCost }
+  if (node.children) {
+    Object.values(node.children).forEach(flatten)
+  }
+}
+flatten(skillTree)
 
 // Define nodeTypes mapping for custom skill nodes
 const nodeTypes = {
@@ -122,6 +134,7 @@ export function ProgressTreePageContent() {
   const unlockedNodes = useGameStore((state) => state.unlockedNodes)
 
   const [toast, setToast] = useState(null)
+  const [selectedNodeId, setSelectedNodeId] = useState(null)
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type, id: Date.now() })
@@ -239,6 +252,7 @@ export function ProgressTreePageContent() {
       const layoutNode = (node, relativeX, currentY, isSequential, parentIds) => {
         const status = getNodeStatus(node.id)
         const xpCost = node.xpCost
+        const effectiveParentIds = node.parents || parentIds
 
         branchNodes.push({
           id: node.id,
@@ -251,11 +265,10 @@ export function ProgressTreePageContent() {
             xpCost,
             color: branchColor,
             status,
+            parents: effectiveParentIds,
             onUnlock: () => handleUnlock(node.id, xpCost || 0),
           }
         })
-
-        const effectiveParentIds = node.parents || parentIds
         effectiveParentIds.forEach(pId => {
           branchEdges.push({
             source: pId,
@@ -299,7 +312,7 @@ export function ProgressTreePageContent() {
         }
       }
 
-      layoutNode(branch, 0, 270, true, [])
+      layoutNode(branch, 0, 270, true, ['ruralAutomation'])
 
       const minX = Math.min(...branchNodes.map(n => n.x))
       const maxX = Math.max(...branchNodes.map(n => n.x))
@@ -373,9 +386,6 @@ export function ProgressTreePageContent() {
 
     // 5. Populate React Flow arrays
     branchesLayout.forEach((layout) => {
-      // Add root edge to this branch header
-      addEdge(rootId, layout.branchId, rootStatus, layout.branchStatus, layout.branchColor)
-
       // Add all laid out nodes
       layout.nodes.forEach(n => {
         nodes.push({
@@ -426,6 +436,23 @@ export function ProgressTreePageContent() {
     }
   }, [rootX, setViewport, prevRootX])
 
+  const selectedFlowNode = useMemo(() => {
+    return flowNodes.find(n => n.id === selectedNodeId)
+  }, [flowNodes, selectedNodeId])
+
+  const selectedNodeInfo = selectedNodeId ? findNodeById(skillTree, selectedNodeId) : null
+  const selectedNodeStatus = selectedNodeId ? getNodeStatus(selectedNodeId) : null
+
+  const isRootNode = selectedNodeId === 'ruralAutomation'
+  const isTitleNode = selectedNodeId !== 'ruralAutomation' && selectedNodeInfo?.xpCost === undefined
+
+  const nodeColor = selectedFlowNode?.data?.color || selectedNodeInfo?.color || '#3c2a21'
+  const nodeIcon = selectedFlowNode?.data?.icon || selectedNodeInfo?.icon || 'star'
+  const nodeTitle = selectedFlowNode?.data?.title || selectedNodeInfo?.name || selectedNodeId
+  const nodeDesc = selectedFlowNode?.data?.description || selectedNodeInfo?.description || 'No description available.'
+  const nodeParents = selectedFlowNode?.data?.parents || selectedNodeInfo?.parents || []
+  const nodeXpCost = selectedFlowNode?.data?.xpCost !== undefined ? selectedFlowNode?.data?.xpCost : selectedNodeInfo?.xpCost
+
   return (
     <div className="progress-tree-page">
       {/* Top App Bar */}
@@ -446,11 +473,119 @@ export function ProgressTreePageContent() {
             panOnScroll={true}
             preventScrolling={true}
             translateExtent={translateExtent}
+            onNodeClick={(event, node) => setSelectedNodeId(node.id)}
+            onPaneClick={() => setSelectedNodeId(null)}
           >
             <Background color="#3c2a21" gap={20} size={1} />
             <Controls showInteractive={false} position="bottom-right" />
           </ReactFlow>
         </div>
+
+        {/* Selected Node Details Side Panel */}
+        {selectedNodeId && selectedNodeInfo && (
+          <div className="progress-tree-page__side-panel pixel-border-thick top-light-inset">
+            {/* Side Panel Header */}
+            <div className="progress-tree-side-panel__header" style={{ borderBottomColor: nodeColor }}>
+              <div className="progress-tree-side-panel__title-wrap">
+                <MaterialIcon 
+                  icon={nodeIcon} 
+                  style={{ color: nodeColor }} 
+                  size="24px"
+                />
+                <span className="font-headline-md progress-tree-side-panel__title">{nodeTitle}</span>
+              </div>
+              <button 
+                className="progress-tree-side-panel__close-btn pixel-border btn-press"
+                onClick={() => setSelectedNodeId(null)}
+              >
+                <MaterialIcon icon="close" size="18px" style={{ color: '#3c2a21' }} />
+              </button>
+            </div>
+
+            {/* Side Panel Content */}
+            <div className="progress-tree-side-panel__content">
+              {/* Status Section */}
+              <div className="progress-tree-side-panel__section">
+                <span className="progress-tree-side-panel__section-title">STATUS</span>
+                <span 
+                  className={`progress-tree-side-panel__status progress-tree-side-panel__status--${selectedNodeStatus}`}
+                  style={{ color: isRootNode || isTitleNode ? nodeColor : (selectedNodeStatus === 'unlocked' ? '#4caf50' : selectedNodeStatus === 'reachable' ? '#ff9800' : '#888') }}
+                >
+                  {isRootNode ? 'CORE SYSTEM' : isTitleNode ? 'BRANCH ROOT' : (selectedNodeStatus === 'unlocked' ? 'UNLOCKED' : selectedNodeStatus === 'reachable' ? 'AVAILABLE' : 'LOCKED')}
+                </span>
+              </div>
+
+              {/* Description Section */}
+              <div className="progress-tree-side-panel__section">
+                <span className="progress-tree-side-panel__section-title">DESCRIPTION</span>
+                <p className="progress-tree-side-panel__desc">{nodeDesc}</p>
+              </div>
+
+              {/* Prerequisites Section */}
+              {nodeParents && nodeParents.length > 0 && (
+                <div className="progress-tree-side-panel__section">
+                  <span className="progress-tree-side-panel__section-title">PREREQUISITES</span>
+                  <div className="progress-tree-side-panel__prereqs">
+                    {nodeParents.map(pId => {
+                      const pName = flatNodes[pId]?.name || pId
+                      const isParentUnlocked = pId === 'ruralAutomation' || unlockedNodes.includes(pId) || flatNodes[pId]?.xpCost === undefined
+                      return (
+                        <div key={pId} className="progress-tree-side-panel__prereq-item" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <MaterialIcon 
+                            icon={isParentUnlocked ? 'check_circle' : 'cancel'} 
+                            style={{ color: isParentUnlocked ? '#4caf50' : '#f44336' }} 
+                            size="20px"
+                          />
+                          <span className={isParentUnlocked ? 'unlocked' : 'locked'} style={{ fontSize: '15px' }}>{pName}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* XP Cost Section */}
+              {nodeXpCost !== undefined && (
+                <div className="progress-tree-side-panel__section">
+                  <span className="progress-tree-side-panel__section-title">UNLOCK COST</span>
+                  <div className="progress-tree-side-panel__cost-row">
+                    <MaterialIcon icon="star" filled size="16px" style={{ color: nodeColor }} />
+                    <span className="font-label-tech" style={{ fontSize: '16px', fontWeight: 'bold' }}>{nodeXpCost.toLocaleString()} XP</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Side Panel Footer Action */}
+            <div className="progress-tree-side-panel__footer">
+              {isRootNode ? (
+                <button className="progress-tree-side-panel__btn progress-tree-side-panel__btn--unlocked pixel-border" style={{ backgroundColor: nodeColor, color: '#fff', opacity: 0.9 }} disabled>
+                  CORE ACTIVE
+                </button>
+              ) : isTitleNode ? (
+                <button className="progress-tree-side-panel__btn progress-tree-side-panel__btn--unlocked pixel-border" style={{ backgroundColor: nodeColor, color: '#fff', opacity: 0.9 }} disabled>
+                  BRANCH ACTIVE
+                </button>
+              ) : selectedNodeStatus === 'unlocked' ? (
+                <button className="progress-tree-side-panel__btn progress-tree-side-panel__btn--unlocked pixel-border" disabled>
+                  RESEARCH COMPLETED
+                </button>
+              ) : selectedNodeStatus === 'reachable' ? (
+                <button 
+                  className="progress-tree-side-panel__btn progress-tree-side-panel__btn--unlock pixel-border top-light-inset btn-press"
+                  style={{ backgroundColor: nodeColor }}
+                  onClick={() => handleUnlock(selectedNodeId, nodeXpCost || 0)}
+                >
+                  RESEARCH ({(nodeXpCost || 0).toLocaleString()} XP)
+                </button>
+              ) : (
+                <button className="progress-tree-side-panel__btn progress-tree-side-panel__btn--locked pixel-border" disabled>
+                  PREREQUISITES REQUIRED
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Toast Notification popup */}

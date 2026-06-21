@@ -78,7 +78,7 @@
   transition: transform 0.15s ease, filter 0.15s ease;
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 900;
-  font-size: 14px;
+  font-size: 15px;
   border: 2px solid var(--color-soil-dark, #3c2a21);
 }
 
@@ -178,7 +178,7 @@
   border-radius: 4px;
   padding: 12px 16px;
   margin: 18px 0;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--color-soil-dark, #3c2a21);
 }
 
@@ -270,7 +270,7 @@
 
 .help-manual-tile-type-tag {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-size: 15px;
   background-color: var(--color-soil-dark, #3c2a21);
   color: #ffffff;
   padding: 2px 8px;
@@ -279,7 +279,7 @@
 }
 
 .help-manual-tile-desc {
-  font-size: 13px;
+  font-size: 15px;
   color: rgba(60, 42, 33, 0.85);
   margin: 4px 0 0 0;
 }
@@ -302,14 +302,14 @@
   color: #f5c2e7;
   font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 15px;
   display: block;
   margin-bottom: 4px;
 }
 
 .help-manual-code-desc {
   color: #cdd6f4;
-  font-size: 13px;
+  font-size: 15px;
   margin: 0;
 }
 
@@ -321,7 +321,7 @@
   border-radius: 4px;
   padding: 2px 6px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 15px;
   color: var(--color-soil-dark, #3c2a21);
   font-weight: 700;
 }
@@ -334,7 +334,7 @@
   border: 2px solid var(--color-soil-dark, #3c2a21);
   padding: 4px 14px;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 15px;
   font-family: 'Space Grotesk', sans-serif;
   letter-spacing: 0.1em;
   margin-bottom: 16px;

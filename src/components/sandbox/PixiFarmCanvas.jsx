@@ -291,6 +291,7 @@ function drawTileSandbox(app, textures, initialGrid, interactive = true) {
   const tileBaseSprites = Array.from({ length: gridSize }, () => Array(gridSize).fill(null))
   const tileFallbacks = Array.from({ length: gridSize }, () => Array(gridSize).fill(null))
   const progressTexts = Array.from({ length: gridSize }, () => Array(gridSize).fill(null))
+  const tileCoords = Array.from({ length: gridSize }, () => Array(gridSize).fill(null))
 
   // Create viewport container to hold all visual elements for centralized zoom scaling
   const viewportContainer = new Container()
@@ -480,8 +481,8 @@ function drawTileSandbox(app, textures, initialGrid, interactive = true) {
       let pText = null
       if (interactive) {
         const textStyle = new TextStyle({
-          fontFamily: 'Silom',
-          fontSize: 12,
+          fontFamily: 'Pixel Operator',
+          fontSize: 15,
           fill: 0xffffff,
           fontWeight: 'bold',
           stroke: { color: 0x000000, width: 3 }
@@ -494,6 +495,24 @@ function drawTileSandbox(app, textures, initialGrid, interactive = true) {
         tileContainer.addChild(pText)
         progressTexts[r][c] = pText
       }
+
+      // Subtle grid coordinate text label
+      const gridOverlayEnabled = useGameStore.getState().settings?.gridOverlay !== false
+      const coordText = new Text({
+        text: `(${r},${c})`,
+        style: new TextStyle({
+          fontFamily: 'Pixel Operator Mono',
+          fontSize: 14,
+          fill: 0x3c2a21,
+          fontWeight: '500',
+        })
+      })
+      coordText.alpha = 0.25
+      coordText.x = 8
+      coordText.y = 8
+      coordText.visible = gridOverlayEnabled
+      tileContainer.addChild(coordText)
+      tileCoords[r][c] = coordText
 
       tileContainer.on('pointerover', () => {
         targetDroneX = tileX + tileSize / 2
@@ -518,6 +537,8 @@ function drawTileSandbox(app, textures, initialGrid, interactive = true) {
 
   // ---- Drone ----
   const droneContainer = new Container()
+  droneContainer.eventMode = 'none'
+  droneContainer.interactiveChildren = false
   droneContainer.x = width / 2
   droneContainer.y = height / 2 - 20 * (tileSize / 96)
 
@@ -549,21 +570,21 @@ function drawTileSandbox(app, textures, initialGrid, interactive = true) {
   // Label (repositioned above larger drone)
   const labelOffsetY = -(droneSpriteSize / 2) - 10 * droneScale
   const labelBg = new Graphics()
-  labelBg.roundRect(-30, labelOffsetY - 2, 60, 18, 2)
+  labelBg.roundRect(-45, labelOffsetY - 4, 90, 24, 4)
   labelBg.fill({ color: 0xf4faff })
   labelBg.setStrokeStyle({ width: 2, color: 0x3c2a21 })
   labelBg.stroke()
   droneContainer.addChild(labelBg)
 
   const labelStyle = new TextStyle({
-    fontFamily: 'Silom',
-    fontSize: 9,
+    fontFamily: 'Pixel Operator',
+    fontSize: 15,
     fill: 0x006e1c,
     fontWeight: '500',
   })
   const labelText = new Text({ text: 'Idle', style: labelStyle })
-  labelText.x = -26
-  labelText.y = labelOffsetY
+  labelText.x = -38
+  labelText.y = labelOffsetY - 2
   droneContainer.addChild(labelText)
 
   viewportContainer.addChild(droneContainer)
@@ -692,6 +713,13 @@ function drawTileSandbox(app, textures, initialGrid, interactive = true) {
             } else {
               pText.visible = false
             }
+          }
+
+          // 5. Update coordinate label visibility
+          const coordText = tileCoords[r]?.[c]
+          if (coordText) {
+            const gridOverlay = useGameStore.getState().settings?.gridOverlay !== false
+            coordText.visible = gridOverlay
           }
         }
       }
