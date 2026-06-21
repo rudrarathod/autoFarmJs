@@ -1,6 +1,8 @@
 # Rural Automation
 ### *An educational incremental automation game featuring sandboxed user scripting, a WebGL-based farm engine, and dynamic node layouts.*
 
+👉 **[Live Demo](https://code-farm.vercel.app/)**
+
 ## Project Overview
 **Rural Automation** is an interactive, browser-based incremental idle game that teaches programming concepts through gameplay automation. Players write custom JavaScript code to instruct an autonomous drone to scan, till, plant, harvest, and manage power constraints across an expanding farm grid. The game is architected around a React/Vite foundation, pairing a sandboxed asynchronous execution engine with a hardware-accelerated WebGL game canvas and a dynamic research/upgrade skill graph.
 
