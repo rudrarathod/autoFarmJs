@@ -39,11 +39,13 @@
   font-family: 'Pixel Operator', sans-serif !important;
 }
 
-/* Preserve Pixel Operator Mono ONLY for code lines within the editor body and logs */
-.view-line, 
-.view-line *,
-.view-lines, 
-.view-lines *,
+/* Exclude Monaco Editor from global fonts and force a simple monospace font */
+.monaco-editor,
+.monaco-editor * {
+  font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace !important;
+}
+
+/* Preserve Pixel Operator Mono ONLY for code lines within logs and standard code tags */
 .drone-logic-panel__console-lines,
 .drone-logic-panel__console-lines *,
 code, pre {

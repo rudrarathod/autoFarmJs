@@ -324,7 +324,7 @@ export default function DroneLogicPanel() {
             onMount={handleEditorMount}
             theme={editorTheme}
             options={{
-              fontSize: 13,
+              fontSize: 15,
               fontFamily: "'JetBrains Mono', monospace",
               lineHeight: 20,
               minimap: { enabled: false },
