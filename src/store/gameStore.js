@@ -119,30 +119,36 @@ export const useGameStore = create(
       // --- Drone State ---
       droneRow: 0,
       droneCol: 0,
-      droneScript: `// 🤖 Welcome to Drone Logic!
+      droneScript: `// 🤖 Welcome to Drone Logic (Arduino Style)!
 // Automate planting, harvesting, and tilling.
 // Return to the charging pad at (0, 0) when energy is low!
 
-for (let i = 0; i < sensor.gridSize() ** 2; i++) {
+void setup() {
+  Serial.println("Drone system initialized!");
+}
+
+void loop() {
   // Check if energy is low and head back to charge
   if (sensor.getEnergy() < 15) {
-    log("🔋 Energy low! Returning to base.");
-    await drone.moveTo(0, 0);
-    await drone.charge();
+    Serial.println("Energy low! Returning to base.");
+    drone.moveTo(0, 0);
+    drone.charge();
   }
 
   // Check state of the current tile
   if (sensor.isRipe()) {
-    await drone.harvest();
-    await drone.plant('wheat');
+    drone.harvest();
+    drone.plant("wheat");
   } else if (sensor.isTurf()) {
-    await drone.till();
+    drone.till();
   }
   
-  await drone.moveNext();
+  drone.moveNext();
 }
 `,
       droneStatus: 'idle', // 'idle' | 'running'
+      droneEditorMode: 'blocks', // 'blocks' | 'text'
+      droneBlocklyWorkspace: null, // JSON object representation of Blockly workspace
       droneConsole: [], // Array of { text, type, id }
       droneMessage: 'Idle',
       isHelpOpen: false,
@@ -167,6 +173,8 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
 
       setDronePosition: (row, col) => set({ droneRow: row, droneCol: col }),
       setDroneScript: (script) => set({ droneScript: script }),
+      setDroneEditorMode: (mode) => set({ droneEditorMode: mode }),
+      setDroneBlocklyWorkspace: (workspace) => set({ droneBlocklyWorkspace: workspace }),
       setDroneStatus: (status) => set((state) => ({
         droneStatus: status,
         droneMessage: status === 'idle' ? 'Idle' : state.droneMessage
@@ -518,7 +526,36 @@ for (let i = 0; i < sensor.gridSize() ** 2; i++) {
         zoom: 1.0,
         droneRow: 0,
         droneCol: 0,
+        droneScript: `// 🤖 Welcome to Drone Logic (Arduino Style)!
+// Automate planting, harvesting, and tilling.
+// Return to the charging pad at (0, 0) when energy is low!
+
+void setup() {
+  Serial.println("Drone system initialized!");
+}
+
+void loop() {
+  // Check if energy is low and head back to charge
+  if (sensor.getEnergy() < 15) {
+    Serial.println("Energy low! Returning to base.");
+    drone.moveTo(0, 0);
+    drone.charge();
+  }
+
+  // Check state of the current tile
+  if (sensor.isRipe()) {
+    drone.harvest();
+    drone.plant("wheat");
+  } else if (sensor.isTurf()) {
+    drone.till();
+  }
+  
+  drone.moveNext();
+}
+`,
         droneStatus: 'idle',
+        droneEditorMode: 'blocks',
+        droneBlocklyWorkspace: null,
         droneConsole: [],
         droneMessage: 'Idle',
         isHelpOpen: false,

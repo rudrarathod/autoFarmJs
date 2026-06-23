@@ -371,7 +371,7 @@
 /* Responsive: Side panel on desktop */
 @media (min-width: 1024px) {
   .drone-logic-panel {
-    width: 400px;
+    width: 520px;
     height: 100%;
     border-top: none;
     border-left: 4px solid var(--color-soil-dark);
@@ -397,3 +397,93 @@
   background: rgba(94, 189, 116, 0.18) !important;
   border-left: 4px solid var(--color-meadow-green) !important;
 }
+
+/* Blockly and Code Editor Layout */
+.drone-logic-panel__editor-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background-color: #1e1e2e;
+}
+
+.drone-logic-panel__blockly-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
+/* Mode Switcher Buttons */
+.drone-logic-panel__mode-selector {
+  display: flex;
+  background-color: var(--color-surface-container-low);
+  border-bottom: 2px solid var(--color-outline);
+}
+
+.drone-logic-panel__mode-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-on-surface-variant);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.drone-logic-panel__mode-btn:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.drone-logic-panel__mode-btn--active {
+  color: var(--color-meadow-green);
+  background-color: rgba(76, 175, 80, 0.06);
+}
+
+/* Code Preview Drawer */
+.drone-logic-panel__code-preview {
+  background-color: #15161e;
+  border-top: 2px solid var(--color-outline);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.drone-logic-panel__preview-details {
+  width: 100%;
+}
+
+.drone-logic-panel__preview-details summary {
+  padding: 8px 16px;
+  cursor: pointer;
+  color: #abb2bf;
+  font-size: 12px;
+  font-weight: 700;
+  user-select: none;
+  background-color: #191a24;
+}
+
+.drone-logic-panel__preview-details summary:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.drone-logic-panel__preview-code {
+  margin: 0;
+  padding: 12px 16px;
+  max-height: 140px;
+  overflow-y: auto;
+  background-color: #1e1e2e;
+  color: #98c379;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+

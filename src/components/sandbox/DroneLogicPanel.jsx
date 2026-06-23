@@ -4,6 +4,8 @@ import './DroneLogicPanel.css'
 import MaterialIcon from '../common/MaterialIcon.jsx'
 import { useGameStore } from '../../store/gameStore.js'
 import { createDroneRunner } from '../../engine/DroneInterpreter.js'
+import BlocklyEditor from './BlocklyEditor.jsx'
+
 
 /**
  * Interactive code editor panel for drone logic scripting.
@@ -15,8 +17,10 @@ export default function DroneLogicPanel() {
   const droneStatus = useGameStore((s) => s.droneStatus)
   const droneConsole = useGameStore((s) => s.droneConsole)
   const droneSpeedMultiplier = useGameStore((s) => s.droneSpeedMultiplier || 1.0)
+  const droneEditorMode = useGameStore((s) => s.droneEditorMode)
   const setDroneScript = useGameStore((s) => s.setDroneScript)
   const setDroneSpeedMultiplier = useGameStore((s) => s.setDroneSpeedMultiplier)
+  const setDroneEditorMode = useGameStore((s) => s.setDroneEditorMode)
   const editorTheme = useGameStore((s) => s.settings?.editorTheme || 'drone-dark')
 
   const [activeTab, setActiveTab] = useState('editor') // 'editor' | 'console'
@@ -179,13 +183,6 @@ export default function DroneLogicPanel() {
     editorRef.current = editor
     monacoRef.current = monaco
 
-    // Configure JavaScript compiler options to target ES6 and include only ES6 core (no DOM/browser libraries)
-    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-      target: monaco.languages.typescript.ScriptTarget.ES6,
-      lib: ['es6'],
-      allowNonTsExtensions: true,
-    })
-
     // Define a cozy dark theme matching the game aesthetic
     monaco.editor.defineTheme('drone-dark', {
       base: 'vs-dark',
@@ -216,8 +213,8 @@ export default function DroneLogicPanel() {
     })
     monaco.editor.setTheme(editorTheme)
 
-    // Register drone API autocomplete
-    monaco.languages.registerCompletionItemProvider('javascript', {
+    // Register drone API autocomplete for C++
+    monaco.languages.registerCompletionItemProvider('cpp', {
       provideCompletionItems: (model, position) => {
         const word = model.getWordUntilPosition(position)
         const range = {
@@ -234,13 +231,13 @@ export default function DroneLogicPanel() {
         if (textBefore.endsWith('drone.')) {
           return {
             suggestions: [
-              { label: 'harvest', kind: monaco.languages.CompletionItemKind.Method, insertText: 'harvest()', range, detail: 'Harvest the crop at the current tile', documentation: 'Harvests the ripe crop or mines ore at the drone\'s current position.' },
-              { label: 'plant', kind: monaco.languages.CompletionItemKind.Method, insertText: "plant('${1:wheat}')", insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: 'Plant a crop on tilled soil', documentation: 'Plants the specified crop. Options: wheat, carrot, beetroot, potato, watermelon, grass' },
-              { label: 'till', kind: monaco.languages.CompletionItemKind.Method, insertText: 'till()', range, detail: 'Till turf into farmland', documentation: 'Tills the turf at the current position into soil. May reveal ores!' },
-              { label: 'moveNext', kind: monaco.languages.CompletionItemKind.Method, insertText: 'moveNext()', range, detail: 'Move to the next tile', documentation: 'Moves the drone to the next tile (left-to-right, top-to-bottom, wrapping around).' },
-              { label: 'moveTo', kind: monaco.languages.CompletionItemKind.Method, insertText: 'moveTo(${1:0}, ${2:0})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: 'Move to a specific tile (row, col)', documentation: 'Moves the drone to the specified grid position.' },
-              { label: 'wait', kind: monaco.languages.CompletionItemKind.Method, insertText: 'wait(${1:1000})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: 'Wait for milliseconds', documentation: 'Pauses the drone for the specified duration.' },
-              { label: 'charge', kind: monaco.languages.CompletionItemKind.Method, insertText: 'charge()', range, detail: 'Charge at base (0,0)', documentation: 'Fully recharges the drone. Must be positioned at the charging pad (0,0).' },
+              { label: 'harvest', kind: monaco.languages.CompletionItemKind.Method, insertText: 'harvest();', range, detail: 'Harvest crop/mine ore', documentation: 'Harvests the ripe crop or mines ore at the drone\'s current position.' },
+              { label: 'plant', kind: monaco.languages.CompletionItemKind.Method, insertText: 'plant("${1:wheat}");', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: 'Plant crop on soil', documentation: 'Plants the specified crop. Options: wheat, carrot, beetroot, potato, watermelon, grass' },
+              { label: 'till', kind: monaco.languages.CompletionItemKind.Method, insertText: 'till();', range, detail: 'Till turf into soil', documentation: 'Tills the turf at the current position into soil. May reveal ores!' },
+              { label: 'moveNext', kind: monaco.languages.CompletionItemKind.Method, insertText: 'moveNext();', range, detail: 'Move to the next tile', documentation: 'Moves the drone to the next tile (left-to-right, top-to-bottom, wrapping around).' },
+              { label: 'moveTo', kind: monaco.languages.CompletionItemKind.Method, insertText: 'moveTo(${1:0}, ${2:0});', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: 'Move to (row, col)', documentation: 'Moves the drone to the specified grid position.' },
+              { label: 'wait', kind: monaco.languages.CompletionItemKind.Method, insertText: 'wait(${1:1000});', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: 'Wait milliseconds', documentation: 'Pauses the drone for the specified duration.' },
+              { label: 'charge', kind: monaco.languages.CompletionItemKind.Method, insertText: 'charge();', range, detail: 'Charge at base (0,0)', documentation: 'Fully recharges the drone. Must be positioned at the charging pad (0,0).' },
             ],
           }
         }
@@ -248,16 +245,25 @@ export default function DroneLogicPanel() {
         if (textBefore.endsWith('sensor.')) {
           return {
             suggestions: [
-              { label: 'isRipe', kind: monaco.languages.CompletionItemKind.Method, insertText: 'isRipe()', range, detail: 'Is the current tile ready to harvest?', documentation: 'Returns true if the current tile has a ripe crop.' },
-              { label: 'isSoil', kind: monaco.languages.CompletionItemKind.Method, insertText: 'isSoil()', range, detail: 'Is the current tile tilled soil?', documentation: 'Returns true if the current tile is tilled farmland.' },
-              { label: 'isTurf', kind: monaco.languages.CompletionItemKind.Method, insertText: 'isTurf()', range, detail: 'Is the current tile unplowed grass?', documentation: 'Returns true if the current tile is wild turf/grass.' },
-              { label: 'isOre', kind: monaco.languages.CompletionItemKind.Method, insertText: 'isOre()', range, detail: 'Is the current tile an ore deposit?', documentation: 'Returns true if the current tile contains copper, iron, or crystal ore.' },
-              { label: 'isGrowing', kind: monaco.languages.CompletionItemKind.Method, insertText: 'isGrowing()', range, detail: 'Is a crop currently growing here?', documentation: 'Returns true if the tile has a seedling or growing crop.' },
-              { label: 'currentTile', kind: monaco.languages.CompletionItemKind.Method, insertText: 'currentTile()', range, detail: 'Get info about the current tile', documentation: 'Returns the full tile object: { type, crop, progress, baseType }' },
-              { label: 'gridSize', kind: monaco.languages.CompletionItemKind.Method, insertText: 'gridSize()', range, detail: 'Get the grid dimension', documentation: 'Returns the current grid size (e.g. 3 for a 3x3 grid).' },
-              { label: 'position', kind: monaco.languages.CompletionItemKind.Method, insertText: 'position()', range, detail: 'Get the drone position', documentation: 'Returns { row, col } of the drone\'s current position.' },
-              { label: 'getEnergy', kind: monaco.languages.CompletionItemKind.Method, insertText: 'getEnergy()', range, detail: 'Get current energy level', documentation: 'Returns the current drone energy (0 - 100).' },
+              { label: 'isRipe', kind: monaco.languages.CompletionItemKind.Method, insertText: 'isRipe()', range, detail: 'Is tile ripe?', documentation: 'Returns true if the current tile has a ripe crop.' },
+              { label: 'isSoil', kind: monaco.languages.CompletionItemKind.Method, insertText: 'isSoil()', range, detail: 'Is tile soil?', documentation: 'Returns true if the current tile is tilled farmland.' },
+              { label: 'isTurf', kind: monaco.languages.CompletionItemKind.Method, insertText: 'isTurf()', range, detail: 'Is tile turf?', documentation: 'Returns true if the current tile is wild turf/grass.' },
+              { label: 'isOre', kind: monaco.languages.CompletionItemKind.Method, insertText: 'isOre()', range, detail: 'Is tile ore?', documentation: 'Returns true if the current tile contains copper, iron, or crystal ore.' },
+              { label: 'isGrowing', kind: monaco.languages.CompletionItemKind.Method, insertText: 'isGrowing()', range, detail: 'Is tile growing?', documentation: 'Returns true if the tile has a seedling or growing crop.' },
+              { label: 'currentTile', kind: monaco.languages.CompletionItemKind.Method, insertText: 'currentTile()', range, detail: 'Get tile info', documentation: 'Returns the full tile object.' },
+              { label: 'gridSize', kind: monaco.languages.CompletionItemKind.Method, insertText: 'gridSize()', range, detail: 'Get grid size', documentation: 'Returns the current grid size.' },
+              { label: 'position', kind: monaco.languages.CompletionItemKind.Method, insertText: 'position()', range, detail: 'Get drone position', documentation: 'Returns { row, col } of the drone\'s current position.' },
+              { label: 'getEnergy', kind: monaco.languages.CompletionItemKind.Method, insertText: 'getEnergy()', range, detail: 'Get drone energy', documentation: 'Returns the current drone energy (0 - 100).' },
             ],
+          }
+        }
+
+        if (textBefore.endsWith('Serial.')) {
+          return {
+            suggestions: [
+              { label: 'print', kind: monaco.languages.CompletionItemKind.Method, insertText: 'print("${1:message}");', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: 'Print to console', documentation: 'Prints a message to the drone console.' },
+              { label: 'println', kind: monaco.languages.CompletionItemKind.Method, insertText: 'println("${1:message}");', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: 'Print line to console', documentation: 'Prints a message with a newline to the drone console.' },
+            ]
           }
         }
 
@@ -266,16 +272,16 @@ export default function DroneLogicPanel() {
           suggestions: [
             { label: 'drone', kind: monaco.languages.CompletionItemKind.Variable, insertText: 'drone', range, detail: '🚁 Drone controller', documentation: 'The drone object. Use drone.harvest(), drone.plant(), drone.till(), drone.moveNext(), etc.' },
             { label: 'sensor', kind: monaco.languages.CompletionItemKind.Variable, insertText: 'sensor', range, detail: '📡 Tile sensor', documentation: 'The sensor object. Use sensor.isRipe(), sensor.isSoil(), sensor.gridSize(), etc.' },
-            { label: 'log', kind: monaco.languages.CompletionItemKind.Function, insertText: "log('${1:message}')", insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: '📝 Print to console', documentation: 'Prints a message to the drone console.' },
-            { label: 'await', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'await ', range, detail: 'Wait for async action' },
+            { label: 'Serial', kind: monaco.languages.CompletionItemKind.Variable, insertText: 'Serial', range, detail: '📟 Serial interface', documentation: 'Used for console communication. Use Serial.println("message").' },
+            { label: 'delay', kind: monaco.languages.CompletionItemKind.Function, insertText: 'delay(${1:1000});', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: '⏳ Sleep / Wait', documentation: 'Pauses the drone for a specified duration in milliseconds.' },
+            { label: 'setup', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'void setup() {\n  ${1}\n}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: 'Arduino setup()', documentation: 'Runs once at the start of the script.' },
+            { label: 'loop', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'void loop() {\n  ${1}\n}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range, detail: 'Arduino loop()', documentation: 'Runs repeatedly after setup() finishes.' },
           ],
         }
       },
     })
   }
 
-  // Calculate line count for display
-  const lineCount = (droneScript || '').split('\n').length
 
   return (
     <aside className="drone-logic-panel">
@@ -313,54 +319,93 @@ export default function DroneLogicPanel() {
         </button>
       </div>
 
-      {/* Editor Panel — Monaco Editor */}
+      {/* Editor Mode Selector (Only when Editor tab is active) */}
       {activeTab === 'editor' && (
-        <div className="drone-logic-panel__editor">
-          <Editor
-            height="100%"
-            defaultLanguage="javascript"
-            defaultValue={useGameStore.getState().droneScript || ''}
-            onChange={handleEditorChange}
-            onMount={handleEditorMount}
-            theme={editorTheme}
-            options={{
-              fontSize: 15,
-              fontFamily: "'JetBrains Mono', monospace",
-              lineHeight: 20,
-              minimap: { enabled: false },
-              scrollBeyondLastLine: false,
-              wordWrap: 'on',
-              tabSize: 2,
-              automaticLayout: true,
-              readOnly: droneStatus === 'running',
-              suggestOnTriggerCharacters: true,
-              quickSuggestions: true,
-              padding: { top: 12, bottom: 12 },
-              lineNumbers: 'on',
-              lineNumbersMinChars: 3,
-              glyphMargin: true,
-              folding: false,
-              lineDecorationsWidth: 12,
-              overviewRulerLanes: 0,
-              hideCursorInOverviewRuler: true,
-              overviewRulerBorder: false,
-              scrollbar: {
-                vertical: 'auto',
-                horizontal: 'auto',
-                verticalScrollbarSize: 8,
-                horizontalScrollbarSize: 8,
-              },
-              renderLineHighlight: 'line',
-              fixedOverflowWidgets: true,
+        <div className="drone-logic-panel__mode-selector">
+          <button
+            className={`drone-logic-panel__mode-btn ${droneEditorMode === 'blocks' ? 'drone-logic-panel__mode-btn--active' : ''}`}
+            onClick={() => setDroneEditorMode('blocks')}
+          >
+            <MaterialIcon icon="widgets" />
+            <span>Block Editor</span>
+          </button>
+          <button
+            className={`drone-logic-panel__mode-btn ${droneEditorMode === 'text' ? 'drone-logic-panel__mode-btn--active' : ''}`}
+            onClick={() => {
+              if (window.confirm("Switching to Text Editor will let you edit the code directly, but block modifications won't sync back to the block layout automatically. Continue?")) {
+                setDroneEditorMode('text');
+              }
             }}
-            loading={
-              <div className="drone-logic-panel__loading">
-                <span className="font-label-tech">Loading editor...</span>
-              </div>
-            }
-          />
+          >
+            <MaterialIcon icon="code" />
+            <span>Code Editor</span>
+          </button>
         </div>
       )}
+
+      {/* Editor Panel — Blockly or Monaco Editor */}
+      {activeTab === 'editor' && (
+        <div className="drone-logic-panel__editor-container">
+          {droneEditorMode === 'blocks' ? (
+            <div className="drone-logic-panel__blockly-wrapper">
+              <BlocklyEditor />
+              <div className="drone-logic-panel__code-preview">
+                <details className="drone-logic-panel__preview-details">
+                  <summary className="font-label-tech">👁️ Generated Arduino C++ Code</summary>
+                  <pre className="drone-logic-panel__preview-code"><code>{droneScript}</code></pre>
+                </details>
+              </div>
+            </div>
+          ) : (
+            <div className="drone-logic-panel__editor">
+              <Editor
+                height="100%"
+                defaultLanguage="cpp"
+                defaultValue={useGameStore.getState().droneScript || ''}
+                onChange={handleEditorChange}
+                onMount={handleEditorMount}
+                theme={editorTheme}
+                options={{
+                  fontSize: 15,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  lineHeight: 20,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  wordWrap: 'on',
+                  tabSize: 2,
+                  automaticLayout: true,
+                  readOnly: droneStatus === 'running',
+                  suggestOnTriggerCharacters: true,
+                  quickSuggestions: true,
+                  padding: { top: 12, bottom: 12 },
+                  lineNumbers: 'on',
+                  lineNumbersMinChars: 3,
+                  glyphMargin: true,
+                  folding: false,
+                  lineDecorationsWidth: 12,
+                  overviewRulerLanes: 0,
+                  hideCursorInOverviewRuler: true,
+                  overviewRulerBorder: false,
+                  scrollbar: {
+                    vertical: 'auto',
+                    horizontal: 'auto',
+                    verticalScrollbarSize: 8,
+                    horizontalScrollbarSize: 8,
+                  },
+                  renderLineHighlight: 'line',
+                  fixedOverflowWidgets: true,
+                }}
+                loading={
+                  <div className="drone-logic-panel__loading">
+                    <span className="font-label-tech">Loading editor...</span>
+                  </div>
+                }
+              />
+            </div>
+          )}
+        </div>
+      )}
+
 
       {/* Console Panel */}
       {activeTab === 'console' && (
@@ -383,21 +428,20 @@ export default function DroneLogicPanel() {
         </div>
       )}
 
-      {/* API Reference Hint */}
-      {activeTab === 'editor' && (
+      {/* API Reference Hint (Only in Code Editor mode) */}
+      {activeTab === 'editor' && droneEditorMode === 'text' && (
         <div className="drone-logic-panel__hints">
           <details className="drone-logic-panel__api-ref">
             <summary className="font-label-tech">📖 API Reference</summary>
             <div className="drone-logic-panel__api-list font-label-tech">
               <div className="drone-logic-panel__api-group">
                 <span className="drone-logic-panel__api-title">🚁 drone</span>
-                <code>await drone.harvest()</code>
-                <code>await drone.plant('wheat')</code>
-                <code>await drone.till()</code>
-                <code>await drone.moveNext()</code>
-                <code>await drone.moveTo(row, col)</code>
-                <code>await drone.wait(1000)</code>
-                <code>await drone.charge()</code>
+                <code>drone.harvest()</code>
+                <code>drone.plant("wheat")</code>
+                <code>drone.till()</code>
+                <code>drone.moveNext()</code>
+                <code>drone.moveTo(row, col)</code>
+                <code>drone.charge()</code>
               </div>
               <div className="drone-logic-panel__api-group">
                 <span className="drone-logic-panel__api-title">📡 sensor</span>
@@ -409,6 +453,11 @@ export default function DroneLogicPanel() {
                 <code>sensor.gridSize()</code>
                 <code>sensor.position()</code>
                 <code>sensor.getEnergy()</code>
+              </div>
+              <div className="drone-logic-panel__api-group">
+                <span className="drone-logic-panel__api-title">📟 system</span>
+                <code>Serial.println("msg")</code>
+                <code>delay(ms)</code>
               </div>
             </div>
           </details>

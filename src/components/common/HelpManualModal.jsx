@@ -156,7 +156,7 @@ export default function HelpManualModal() {
                         <span className="help-manual-tile-type-tag">turf</span>
                       </div>
                       <p className="help-manual-tile-desc">
-                        Raw, un-tilled grass. Plants cannot grow here. Run <code>await drone.till()</code> to turn it into soil.
+                        Raw, un-tilled grass. Plants cannot grow here. Run <code>drone.till();</code> to turn it into soil.
                       </p>
                     </div>
                   </div>
@@ -172,7 +172,7 @@ export default function HelpManualModal() {
                         <span className="help-manual-tile-type-tag">soil</span>
                       </div>
                       <p className="help-manual-tile-desc">
-                        Ground that is ready for planting. Use <code>await drone.plant('wheat')</code> to plant seeds.
+                        Ground that is ready for planting. Use <code>drone.plant("wheat");</code> to plant seeds.
                       </p>
                     </div>
                   </div>
@@ -204,7 +204,7 @@ export default function HelpManualModal() {
                         <span className="help-manual-tile-type-tag">ripe</span>
                       </div>
                       <p className="help-manual-tile-desc">
-                        A mature crop that is ready to be harvested. Call <code>await drone.harvest()</code> to gather resources and gain XP. Checked by <code>sensor.isRipe()</code>.
+                        A mature crop that is ready to be harvested. Call <code>drone.harvest();</code> to gather resources and gain XP. Checked by <code>sensor.isRipe()</code>.
                       </p>
                     </div>
                   </div>
@@ -220,7 +220,7 @@ export default function HelpManualModal() {
                         <span className="help-manual-tile-type-tag">copper_ore</span>
                       </div>
                       <p className="help-manual-tile-desc">
-                        A block of raw copper. Use <code>await drone.harvest()</code> to mine it. Checked by <code>sensor.isOre()</code>.
+                        A block of raw copper. Use <code>drone.harvest();</code> to mine it. Checked by <code>sensor.isOre()</code>.
                       </p>
                     </div>
                   </div>
@@ -236,7 +236,7 @@ export default function HelpManualModal() {
                         <span className="help-manual-tile-type-tag">iron_ore</span>
                       </div>
                       <p className="help-manual-tile-desc">
-                        A block of raw iron. Collect with <code>await drone.harvest()</code>. Checked by <code>sensor.isOre()</code>.
+                        A block of raw iron. Collect with <code>drone.harvest();</code>. Checked by <code>sensor.isOre()</code>.
                       </p>
                     </div>
                   </div>
@@ -252,7 +252,7 @@ export default function HelpManualModal() {
                         <span className="help-manual-tile-type-tag">crystal_ore</span>
                       </div>
                       <p className="help-manual-tile-desc">
-                        A crystal ore block. Mine it with <code>await drone.harvest()</code> to get rare crystals. Checked by <code>sensor.isOre()</code>.
+                        A crystal ore block. Mine it with <code>drone.harvest();</code> to get rare crystals. Checked by <code>sensor.isOre()</code>.
                       </p>
                     </div>
                   </div>
@@ -281,7 +281,7 @@ export default function HelpManualModal() {
                         <span className="help-manual-tile-type-tag">charging_station</span>
                       </div>
                       <p className="help-manual-tile-desc">
-                        Located permanently at coordinate <strong>(0,0)</strong>. Position your drone here and call <code>await drone.charge()</code> to recharge the battery.
+                        Located permanently at coordinate <strong>(0,0)</strong>. Position your drone here and call <code>drone.charge();</code> to recharge the battery.
                       </p>
                     </div>
                   </div>
@@ -308,7 +308,7 @@ export default function HelpManualModal() {
                   <div className="help-manual-feature-box">
                     <h3>🏡 Recharging</h3>
                     <p style={{ fontSize: '15px', margin: 0 }}>
-                      Coordinates <strong>(0,0)</strong> is home to a permanent metallic <strong>Charging Pad</strong>. Move there and call <code>await drone.charge()</code> in your script to recharge.
+                      Coordinates <strong>(0,0)</strong> is home to a permanent metallic <strong>Charging Pad</strong>. Move there and call <code>drone.charge();</code> in your script to recharge.
                     </p>
                   </div>
                 </div>
@@ -322,9 +322,9 @@ export default function HelpManualModal() {
                 </p>
                 <pre style={{ background: '#11111b', padding: '12px', borderRadius: '6px', fontFamily: 'JetBrains Mono', fontSize: '15px', color: '#f5c2e7' }}>
 {`if (sensor.getEnergy() < 15) {
-  log("🔋 Returning to base!");
-  await drone.moveTo(0, 0);
-  await drone.charge();
+  Serial.println("🔋 Returning to base!");
+  drone.moveTo(0, 0);
+  drone.charge();
 }`}
                 </pre>
 
@@ -361,28 +361,36 @@ export default function HelpManualModal() {
 
                 <div className="help-manual-code-list">
                   <div className="help-manual-code-item">
-                    <code>await drone.moveNext()</code>
+                    <code>drone.moveNext()</code>
                     <p className="help-manual-code-desc">Moves the drone one step forward in a grid pattern. Wraps around grid borders.</p>
                   </div>
                   <div className="help-manual-code-item">
-                    <code>await drone.moveTo(row, col)</code>
+                    <code>drone.moveTo(row, col)</code>
                     <p className="help-manual-code-desc">Directly flies the drone to grid coordinate (row, col). Consumes Manhattan-distance energy.</p>
                   </div>
                   <div className="help-manual-code-item">
-                    <code>await drone.till()</code>
+                    <code>drone.till()</code>
                     <p className="help-manual-code-desc">Tills the ground under the drone, transforming Turf into soil.</p>
                   </div>
                   <div className="help-manual-code-item">
-                    <code>await drone.plant(cropName)</code>
-                    <p className="help-manual-code-desc">Plants a seed of the specified type (e.g. <code>'wheat'</code>, <code>'carrot'</code>) on tilled soil.</p>
+                    <code>drone.plant(cropName)</code>
+                    <p className="help-manual-code-desc">Plants a seed of the specified type (e.g. <code>"wheat"</code>, <code>"carrot"</code>) on tilled soil.</p>
                   </div>
                   <div className="help-manual-code-item">
-                    <code>await drone.harvest()</code>
+                    <code>drone.harvest()</code>
                     <p className="help-manual-code-desc">Harvests ripe crops or mines ore tiles under the drone, yielding resources.</p>
                   </div>
                   <div className="help-manual-code-item">
-                    <code>await drone.charge()</code>
+                    <code>drone.charge()</code>
                     <p className="help-manual-code-desc">Charges the drone. Must be positioned on the charging pad at (0,0).</p>
+                  </div>
+                  <div className="help-manual-code-item">
+                    <code>delay(ms)</code>
+                    <p className="help-manual-code-desc">Pauses the drone for a specified duration in milliseconds.</p>
+                  </div>
+                  <div className="help-manual-code-item">
+                    <code>Serial.println(message)</code>
+                    <p className="help-manual-code-desc">Prints a message (with a newline) to the drone console.</p>
                   </div>
                   <div className="help-manual-code-item">
                     <code>sensor.getEnergy()</code>

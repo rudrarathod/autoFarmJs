@@ -12,6 +12,140 @@
 const DEFAULT_STEP_DELAY = 600 // ms between each drone action
 
 /**
+ * Transpiles Arduino/C++ style drone code into JavaScript.
+ */
+function transpileArduinoToJS(scriptText) {
+  // Mask strings to protect them from regex replacements
+  const placeholders = [];
+  let masked = scriptText;
+
+  // Mask double-quoted strings
+  masked = masked.replace(/"[^"\\]*(?:\\.[^"\\]*)*"/g, (match) => {
+    const id = `___STR_PLACEHOLDER_${placeholders.length}___`;
+    placeholders.push({ id, val: match });
+    return id;
+  });
+
+  // Mask single-quoted strings
+  masked = masked.replace(/'[^'\\]*(?:\\.[^'\\]*)*'/g, (match) => {
+    const id = `___STR_PLACEHOLDER_${placeholders.length}___`;
+    placeholders.push({ id, val: match });
+    return id;
+  });
+
+  // 1. Remove any existing "await " to start clean
+  let transpiled = masked.replace(/\bawait\s+/g, '');
+
+  // 2. Identify and collect user-defined functions
+  const userFunctions = new Set();
+  const funcDeclRegex = /\b(?:void|int|float|double|char|bool|boolean|String|string|auto)\s+(\w+)\s*\(([^)]*)\)\s*\{/g;
+  let match;
+  while ((match = funcDeclRegex.exec(transpiled)) !== null) {
+    const funcName = match[1];
+    if (funcName !== 'setup' && funcName !== 'loop') {
+      userFunctions.add(funcName);
+    }
+  }
+
+  // 3. Replace function declarations with JS async functions, stripping parameter types
+  transpiled = transpiled.replace(
+    /\b(?:void|int|float|double|char|bool|boolean|String|string|auto)\s+(\w+)\s*\(([^)]*)\)\s*\{/g,
+    (m, funcName, paramList) => {
+      const cleanedParams = paramList
+        .split(',')
+        .map(p => {
+          const parts = p.trim().split(/\s+/);
+          return parts[parts.length - 1]; // get the parameter name
+        })
+        .filter(p => p !== '')
+        .join(', ');
+      return `async function ${funcName}(${cleanedParams}) {`;
+    }
+  );
+
+  // 4. Replace variable declarations:
+  // a) "const int x" -> "const x"
+  transpiled = transpiled.replace(/\bconst\s+(?:int|float|double|char|bool|boolean|String|string|auto)\s+(\w+)\b/g, 'const $1');
+  
+  // b) "int x" -> "let x"
+  transpiled = transpiled.replace(/\b(?:int|float|double|char|bool|boolean|String|string|auto)\s+(\w+)\b/g, 'let $1');
+
+  // 5. Prepend "await " to async functions
+  transpiled = transpiled.replace(/\b(drone\.(?:harvest|plant|till|moveNext|moveTo|wait|charge))\s*\(/g, 'await $1(');
+  transpiled = transpiled.replace(/\b(delay)\s*\(/g, 'await $1(');
+
+  if (userFunctions.size > 0) {
+    const userFuncNames = Array.from(userFunctions).join('|');
+    const userFuncRegex = new RegExp(`\\b(${userFuncNames})\\s*\\(`, 'g');
+    transpiled = transpiled.replace(userFuncRegex, 'await $1(');
+  }
+
+  // Restore string placeholders
+  for (let i = placeholders.length - 1; i >= 0; i--) {
+    const p = placeholders[i];
+    transpiled = transpiled.replace(p.id, p.val);
+  }
+
+  return transpiled;
+}
+
+/**
+ * Instruments control flow statements in the script to support line highlighting and stepping on decisions.
+ */
+function instrumentControlFlow(scriptText) {
+  const lines = scriptText.split('\n');
+  
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+    const lineNum = i + 1;
+    
+    // Skip empty lines, lines that are pure comments
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
+      continue;
+    }
+    
+    // 1. Match "else if (cond)" and "if (cond)"
+    if (/\bif\s*\(/.test(line)) {
+      line = line.replace(/\bif\s*\((.*)\)/, (m, cond) => `if (await _track(${lineNum}), ${cond})`);
+    }
+    // 2. Match "while (cond)"
+    else if (/\bwhile\s*\(/.test(line)) {
+      line = line.replace(/\bwhile\s*\((.*)\)/, (m, cond) => `while (await _track(${lineNum}), ${cond})`);
+    }
+    // 3. Match "for (init; cond; inc)"
+    else if (/\bfor\s*\(/.test(line)) {
+      line = line.replace(/\bfor\s*\(([^;]*);([^;]*);([^;]*)\)/, (m, init, cond, inc) => {
+        return `for (${init}; await _track(${lineNum}), ${cond}; ${inc})`;
+      });
+    }
+    // 4. Match "else {" or "else"
+    else if (/\belse\b/.test(line) && !/\bif\b/.test(line)) {
+      if (line.includes('{')) {
+        line = line.replace(/\belse\s*\{/, `else { await _track(${lineNum});`);
+      } else {
+        // If the brace is on the next line, inject it there
+        for (let j = i + 1; j < lines.length; j++) {
+          if (lines[j].trim() === '{') {
+            lines[j] = `{ await _track(${lineNum});`;
+            break;
+          } else if (lines[j].includes('{')) {
+            lines[j] = lines[j].replace('{', `{ await _track(${lineNum});`);
+            break;
+          } else if (lines[j].trim() !== '') {
+            break;
+          }
+        }
+      }
+    }
+    
+    lines[i] = line;
+  }
+  
+  return lines.join('\n');
+}
+
+/**
  * Creates a drone execution context bound to the game store.
  * Returns { run, stop, step } controls.
  */
@@ -29,12 +163,10 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
     try {
       const lines = err.stack.split('\n')
       for (const line of lines) {
-        if (line.includes('userScript')) {
-          const match = line.match(/:(\d+):\d+\)?$/) || line.match(/Function:(\d+):\d+$/)
-          if (match) {
-            const stackLine = parseInt(match[1], 10)
-            return stackLine - 4
-          }
+        const match = line.match(/<anonymous>:(\d+):\d+\)?$/) || line.match(/Function:(\d+):\d+$/)
+        if (match) {
+          const stackLine = parseInt(match[1], 10)
+          return stackLine - 4
         }
       }
     } catch (e) {
@@ -53,12 +185,10 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
       
       const lines = stack.split('\n')
       for (const line of lines) {
-        if (line.includes('userScript')) {
-          const match = line.match(/:(\d+):\d+\)?$/) || line.match(/Function:(\d+):\d+$/)
-          if (match) {
-            const stackLine = parseInt(match[1], 10)
-            return stackLine - 4
-          }
+        const match = line.match(/<anonymous>:(\d+):\d+\)?$/) || line.match(/Function:(\d+):\d+$/)
+        if (match) {
+          const stackLine = parseInt(match[1], 10)
+          return stackLine - 4
         }
       }
     } catch (e) {
@@ -407,16 +537,57 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
     const sensor = buildSensorAPI()
 
     try {
+      const transpiledScript = transpileArduinoToJS(scriptText)
+      const instrumentedScript = instrumentControlFlow(transpiledScript)
       const wrappedScript = `
-        return (async function userScript(drone, sensor, log) {
-          ${scriptText}
+        return (async function userScript(drone, sensor, log, delay, Serial, yieldThread, _track) {
+          ${instrumentedScript}
+          
+          if (typeof setup === 'function') {
+            await setup();
+          }
+          if (typeof loop === 'function') {
+            while (true) {
+              await loop();
+              await yieldThread();
+            }
+          }
         })
       `
       const scriptFactory = new Function(wrappedScript)
       const userScript = scriptFactory()
       
       const userLog = (msg) => onLog(`📝 ${msg}`, 'info')
+      const delay = async (ms) => {
+        await drone.wait(ms)
+      }
+      const Serial = {
+        print: (msg) => {
+          trackLine()
+          onLog(`📟 ${msg}`, 'info')
+        },
+        println: (msg) => {
+          trackLine()
+          onLog(`📟 ${msg}`, 'info')
+        }
+      }
+      const yieldThread = () => sleep(10, signal)
       
+      const userTrack = async (lineNum) => {
+        if (onLineExecute) {
+          onLineExecute(lineNum)
+        }
+        if (isStepMode) {
+          onStatusChange('paused')
+          onLog(`⏸️ Decision at Line ${lineNum}. Click STEP to continue.`, 'warn')
+          await waitForNextStep(signal)
+          onStatusChange('running')
+        } else {
+          // Allow active highlight to render briefly in normal execution mode
+          await sleep(20, signal)
+        }
+      }
+
       const abortPromise = new Promise((_, reject) => {
         const onAbort = () => {
           reject(new DOMException('Aborted', 'AbortError'))
@@ -429,7 +600,7 @@ export function createDroneRunner(getStore, onLog, onDroneMove, onStatusChange, 
       })
 
       await Promise.race([
-        userScript(drone, sensor, userLog),
+        userScript(drone, sensor, userLog, delay, Serial, yieldThread, userTrack),
         abortPromise
       ])
 
