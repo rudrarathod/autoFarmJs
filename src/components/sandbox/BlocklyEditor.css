@@ -184,14 +184,41 @@
   rx: 0px !important;
   ry: 0px !important;
   opacity: 0.8 !important;
+  transition: fill 0.15s ease, opacity 0.15s ease;
 }
 
 .blocklyScrollbarHandle:hover {
   fill: var(--color-outline-variant) !important;
+  opacity: 1 !important;
 }
 
 .blocklyScrollbarBackground {
   opacity: 0 !important;
+}
+
+/* Flyout-specific scrollbar – make it prominent so users know they can scroll */
+.blocklyFlyoutScrollbar .blocklyScrollbarHandle {
+  fill: #8a8fa8 !important;
+  fill-opacity: 1 !important;
+  rx: 3px !important;
+  ry: 3px !important;
+  width: 6px !important;
+}
+
+.blocklyFlyoutScrollbar .blocklyScrollbarHandle:hover {
+  fill: var(--color-meadow-green, #4caf50) !important;
+}
+
+.blocklyFlyoutScrollbar .blocklyScrollbarBackground {
+  opacity: 0.3 !important;
+  fill: #313244 !important;
+  width: 6px !important;
+}
+
+/* Ensure flyout scrollbar outer SVG is on top of everything */
+.blocklyFlyoutScrollbar {
+  z-index: 110 !important;
+  pointer-events: auto !important;
 }
 
 /* Make block borders and lines sharp and clear */

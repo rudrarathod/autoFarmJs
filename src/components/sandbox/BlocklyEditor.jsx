@@ -4,6 +4,7 @@ import { javascriptGenerator } from 'blockly/javascript'
 import { useGameStore } from '../../store/gameStore.js'
 import MaterialIcon from '../common/MaterialIcon.jsx'
 import './BlocklyEditor.css'
+import './customBlocks.js'
 
 // ----------------------------------------------------
 // 1. CUSTOM FLAT RENDERER (RETRO PIXEL EDGES)
@@ -14,9 +15,9 @@ class RetroConstantProvider extends Blockly.blockRendering.ConstantProvider {
     // Must be set BEFORE super.init() so derived shapes (INSIDE_CORNERS,
     // OUTSIDE_CORNERS) are built with 0-radius — the root cause of misalignment.
     this.CORNER_RADIUS = 0
-    // Tighten internal spacing so blocks fit flush inside C-shape mouths
-    this.MEDIUM_PADDING = 2
-    this.LARGE_PADDING = 2
+    // Tighten internal spacing so blocks fit flush inside C-shape mouths, but keep padding for fields
+    this.MEDIUM_PADDING = 6
+    this.LARGE_PADDING = 8
     this.BETWEEN_STATEMENT_PADDING_Y = 0
     this.STATEMENT_BOTTOM_SPACER = -this.NOTCH_HEIGHT
     // Thick bottom bar so the floor notch has room and doesn't break through
@@ -70,345 +71,7 @@ class RetroRenderer extends Blockly.blockRendering.Renderer {
 const RENDERER_NAME = 'retro_' + Math.random().toString(36).substring(2, 9);
 Blockly.blockRendering.register(RENDERER_NAME, RetroRenderer);
 
-// ----------------------------------------------------
-// 2. CUSTOM BLOCK DEFINITIONS & GENERATOR CODE
-// ----------------------------------------------------
-
-// Setup and Loop blocks
-Blockly.Blocks['arduino_setup'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("void setup()");
-    this.appendStatementInput("STACK")
-      .setCheck(null);
-    this.setNextStatement(true, null); 
-    this.setStyle('control_blocks');
-    this.setTooltip("Runs once at the start of the script.");
-    this.setHelpUrl("");
-    this.setDeletable(false);
-  }
-}
-
-javascriptGenerator.forBlock['arduino_setup'] = function (block, generator) {
-  const branch = generator.statementToCode(block, 'STACK');
-  return 'void setup() {\n' + branch + '}\n\n';
-}
-
-Blockly.Blocks['arduino_loop'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("void loop()");
-    this.appendStatementInput("STACK")
-      .setCheck(null);
-    this.setPreviousStatement(true, null);
-    this.setStyle('control_blocks');
-    this.setTooltip("Runs repeatedly after setup() finishes.");
-    this.setHelpUrl("");
-    this.setDeletable(false);
-  }
-}
-
-javascriptGenerator.forBlock['arduino_loop'] = function (block, generator) {
-  const branch = generator.statementToCode(block, 'STACK');
-  return 'void loop() {\n' + branch + '}\n\n';
-}
-
-// Drone Actions
-Blockly.Blocks['drone_till'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("drone.till()");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setStyle('action_blocks');
-    this.setTooltip("Tills turf at current tile into soil.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['drone_till'] = function () {
-  return '  drone.till();\n';
-}
-
-Blockly.Blocks['drone_plant'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("drone.plant(")
-      .appendField(new Blockly.FieldDropdown([
-        ["wheat", "wheat"],
-        ["carrot", "carrot"],
-        ["beetroot", "beetroot"],
-        ["potato", "potato"],
-        ["watermelon", "watermelon"],
-        ["grass", "grass"]
-      ]), "CROP")
-      .appendField(")");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setStyle('action_blocks');
-    this.setTooltip("Plants selected crop on tilled soil.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['drone_plant'] = function (block) {
-  const crop = block.getFieldValue('CROP');
-  return `  drone.plant("${crop}");\n`;
-}
-
-Blockly.Blocks['drone_harvest'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("drone.harvest()");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setStyle('action_blocks');
-    this.setTooltip("Harvests ripe crop or mines ore at current tile.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['drone_harvest'] = function () {
-  return '  drone.harvest();\n';
-}
-
-Blockly.Blocks['drone_move_next'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("drone.moveNext()");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setStyle('action_blocks');
-    this.setTooltip("Moves drone to next tile (wrap around).");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['drone_move_next'] = function () {
-  return '  drone.moveNext();\n';
-}
-
-Blockly.Blocks['drone_move_to'] = {
-  init: function () {
-    this.appendValueInput("ROW")
-      .setCheck("Number")
-      .appendField("drone.moveTo(row:");
-    this.appendValueInput("COL")
-      .setCheck("Number")
-      .appendField(", col:");
-    this.appendDummyInput()
-      .appendField(")");
-    this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setStyle('action_blocks');
-    this.setTooltip("Moves drone to specified coordinates.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['drone_move_to'] = function (block, generator) {
-  const row = generator.valueToCode(block, 'ROW', 0) || '0';
-  const col = generator.valueToCode(block, 'COL', 0) || '0';
-  return `  drone.moveTo(${row}, ${col});\n`;
-}
-
-Blockly.Blocks['drone_charge'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("drone.charge()");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setStyle('action_blocks');
-    this.setTooltip("Fully recharges energy. Must be at base (0,0).");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['drone_charge'] = function () {
-  return '  drone.charge();\n';
-}
-
-Blockly.Blocks['drone_wait'] = {
-  init: function () {
-    this.appendValueInput("MS")
-      .setCheck("Number")
-      .appendField("delay(");
-    this.appendDummyInput()
-      .appendField("ms)");
-    this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setStyle('action_blocks');
-    this.setTooltip("Pauses drone for specified duration.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['drone_wait'] = function (block, generator) {
-  const ms = generator.valueToCode(block, 'MS', 0) || '1000';
-  return `  delay(${ms});\n`;
-}
-
-// Sensor blocks (returns values)
-Blockly.Blocks['sensor_is_ripe'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("sensor.isRipe()");
-    this.setOutput(true, "Boolean");
-    this.setStyle('sensor_blocks');
-    this.setTooltip("Returns true if crop at current tile is ripe.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['sensor_is_ripe'] = function () {
-  return ['sensor.isRipe()', 0];
-}
-
-Blockly.Blocks['sensor_is_soil'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("sensor.isSoil()");
-    this.setOutput(true, "Boolean");
-    this.setStyle('sensor_blocks');
-    this.setTooltip("Returns true if current tile is tilled soil.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['sensor_is_soil'] = function () {
-  return ['sensor.isSoil()', 0];
-}
-
-Blockly.Blocks['sensor_is_turf'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("sensor.isTurf()");
-    this.setOutput(true, "Boolean");
-    this.setStyle('sensor_blocks');
-    this.setTooltip("Returns true if current tile is wild turf.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['sensor_is_turf'] = function () {
-  return ['sensor.isTurf()', 0];
-}
-
-Blockly.Blocks['sensor_is_ore'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("sensor.isOre()");
-    this.setOutput(true, "Boolean");
-    this.setStyle('sensor_blocks');
-    this.setTooltip("Returns true if current tile contains ore.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['sensor_is_ore'] = function () {
-  return ['sensor.isOre()', 0];
-}
-
-Blockly.Blocks['sensor_is_growing'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("sensor.isGrowing()");
-    this.setOutput(true, "Boolean");
-    this.setStyle('sensor_blocks');
-    this.setTooltip("Returns true if current tile is seedling or growing.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['sensor_is_growing'] = function () {
-  return ['sensor.isGrowing()', 0];
-}
-
-Blockly.Blocks['sensor_get_energy'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("sensor.getEnergy()");
-    this.setOutput(true, "Number");
-    this.setStyle('sensor_blocks');
-    this.setTooltip("Returns drone energy (0 - 100).");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['sensor_get_energy'] = function () {
-  return ['sensor.getEnergy()', 0];
-}
-
-Blockly.Blocks['sensor_grid_size'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("sensor.gridSize()");
-    this.setOutput(true, "Number");
-    this.setStyle('sensor_blocks');
-    this.setTooltip("Returns size of active farming grid.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['sensor_grid_size'] = function () {
-  return ['sensor.gridSize()', 0];
-}
-
-Blockly.Blocks['sensor_position_row'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("sensor.position().row");
-    this.setOutput(true, "Number");
-    this.setStyle('sensor_blocks');
-    this.setTooltip("Returns drone's current row index.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['sensor_position_row'] = function () {
-  return ['sensor.position().row', 0];
-}
-
-Blockly.Blocks['sensor_position_col'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("sensor.position().col");
-    this.setOutput(true, "Number");
-    this.setStyle('sensor_blocks');
-    this.setTooltip("Returns drone's current column index.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['sensor_position_col'] = function () {
-  return ['sensor.position().col', 0];
-}
-
-// System block
-Blockly.Blocks['serial_print'] = {
-  init: function () {
-    this.appendValueInput("MSG")
-      .setCheck(null)
-      .appendField("Serial.println(");
-    this.appendDummyInput()
-      .appendField(")");
-    this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setStyle('system_blocks');
-    this.setTooltip("Prints a message or value to the console.");
-    this.setHelpUrl("");
-  }
-}
-javascriptGenerator.forBlock['serial_print'] = function (block, generator) {
-  const msg = generator.valueToCode(block, 'MSG', 0) || '"message"';
-  return `  Serial.println(${msg});\n`;
-}
-
-// ----------------------------------------------------
-// 3. OVERRIDE STRING LITERALS & VAR TYPE FOR C++
-// ----------------------------------------------------
-
-// Force double quotes for text block in C++ code output
-javascriptGenerator.forBlock['text'] = function (block) {
-  const textValue = block.getFieldValue('TEXT') || ''
-  const escaped = textValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-  return [`"${escaped}"`, 0]
-}
-
-// Override generator.finish to replace 'var ' declarations with 'int ' type for C++ Arduino conformity
-const oldFinish = javascriptGenerator.finish
-javascriptGenerator.finish = function (code) {
-  let finishedCode = oldFinish.call(this, code)
-  finishedCode = finishedCode.replace(/\bvar\s+(\w+);/g, 'int $1;')
-  return finishedCode
-}
+// Block definitions and C++ generators have been refactored to customBlocks.js
 
 // ----------------------------------------------------
 // 4. DEFAULT WORKSPACE STATE
@@ -474,7 +137,8 @@ const CLEAN_WORKSPACE_STATE = {
 // 5. DYNAMIC TOOLBOX GENERATION
 // ----------------------------------------------------
 function getToolboxConfig(unlockedNodes) {
-  const isUnlocked = (nodeId) => unlockedNodes?.includes(nodeId) || false;
+  // Overridden to always return true, disabling the progress lock tree to show all custom blocks
+  const isUnlocked = (nodeId) => true;
 
   const categories = [];
 
@@ -558,13 +222,40 @@ function getToolboxConfig(unlockedNodes) {
     });
   }
 
-  // Category 3: Control Flow
-  const controlBlocks = [];
+  // Category 3: Logic
+  const logicBlocks = [];
   if (isUnlocked('ifStatements')) {
-    controlBlocks.push({ "kind": "block", "type": "controls_if" });
+    logicBlocks.push({ "kind": "block", "type": "controls_if_simple" });
+    logicBlocks.push({ "kind": "block", "type": "controls_if_else" });
   }
+  if (isUnlocked('ifStatements') || isUnlocked('loops') || isUnlocked('whileLoops')) {
+    logicBlocks.push({ "kind": "block", "type": "logic_compare" });
+    logicBlocks.push({ "kind": "block", "type": "logic_operation" });
+    logicBlocks.push({ "kind": "block", "type": "logic_negate" });
+    logicBlocks.push({ "kind": "block", "type": "logic_boolean" });
+  }
+  logicBlocks.push({ "kind": "block", "type": "math_number" });
+  logicBlocks.push({ "kind": "block", "type": "math_arithmetic" });
+  logicBlocks.push({ "kind": "block", "type": "text" });
+  logicBlocks.push({ "kind": "block", "type": "crop_species" });
+  logicBlocks.push({ "kind": "block", "type": "tile_type" });
+
+  if (logicBlocks.length > 0) {
+    categories.push({
+      "kind": "category",
+      "name": "🟩 Logic",
+      "colour": "120",
+      "contents": [
+        { "kind": "label", "text": "🟩 LOGIC", "web-class": "flyout-category-title" },
+        ...logicBlocks
+      ]
+    });
+  }
+
+  // Category 4: Loops
+  const loopBlocks = [];
   if (isUnlocked('loops')) {
-    controlBlocks.push({
+    loopBlocks.push({
       "kind": "block",
       "type": "controls_repeat_ext",
       "inputs": {
@@ -578,53 +269,59 @@ function getToolboxConfig(unlockedNodes) {
     });
   }
   if (isUnlocked('forLoops')) {
-    controlBlocks.push({ "kind": "block", "type": "controls_for" });
+    loopBlocks.push({
+      "kind": "block",
+      "type": "controls_for_cpp",
+      "inputs": {
+        "START": {
+          "block": {
+            "type": "math_number",
+            "fields": { "NUM": 0 }
+          }
+        },
+        "END": {
+          "block": {
+            "type": "math_number",
+            "fields": { "NUM": 10 }
+          }
+        }
+      }
+    });
   }
   if (isUnlocked('whileLoops')) {
-    controlBlocks.push({ "kind": "block", "type": "controls_whileUntil" });
-  }
-
-  if (controlBlocks.length > 0) {
-    categories.push({
-      "kind": "category",
-      "name": "🎛️ Control",
-      "colour": "120",
-      "contents": [
-        { "kind": "label", "text": "🎛️ CONTROL FLOW", "web-class": "flyout-category-title" },
-        ...controlBlocks
-      ]
+    loopBlocks.push({
+      "kind": "block",
+      "type": "controls_while_cpp"
     });
   }
 
-  // Category 4: Logic & Math
-  const utilityBlocks = [];
-  if (isUnlocked('ifStatements') || isUnlocked('loops') || isUnlocked('whileLoops')) {
-    utilityBlocks.push({ "kind": "block", "type": "logic_compare" });
-    utilityBlocks.push({ "kind": "block", "type": "logic_operation" });
-    utilityBlocks.push({ "kind": "block", "type": "logic_negate" });
-    utilityBlocks.push({ "kind": "block", "type": "logic_boolean" });
+  if (loopBlocks.length > 0) {
+    categories.push({
+      "kind": "category",
+      "name": "🟨 Loops",
+      "colour": "45",
+      "contents": [
+        { "kind": "label", "text": "🟨 LOOPS", "web-class": "flyout-category-title" },
+        ...loopBlocks
+      ]
+    });
   }
-  utilityBlocks.push({ "kind": "block", "type": "math_number" });
-  utilityBlocks.push({ "kind": "block", "type": "math_arithmetic" });
-  utilityBlocks.push({ "kind": "block", "type": "text" });
-
-  categories.push({
-    "kind": "category",
-    "name": "🧮 Logic & Math",
-    "colour": "230",
-    "contents": [
-      { "kind": "label", "text": "🧮 LOGIC & MATH", "web-class": "flyout-category-title" },
-      ...utilityBlocks
-    ]
-  });
 
   // Category 5: Variables
   if (isUnlocked('variables') || isUnlocked('basicVariables') || isUnlocked('advancedVariables')) {
     categories.push({
       "kind": "category",
-      "name": "📦 Variables",
-      "colour": "330",
-      "custom": "VARIABLE"
+      "name": "🟦 Variables",
+      "colour": "210",
+      "contents": [
+        { "kind": "label", "text": "🟦 VARIABLES", "web-class": "flyout-category-title" },
+        { "kind": "block", "type": "var_declare_int" },
+        { "kind": "block", "type": "var_declare_float" },
+        { "kind": "block", "type": "var_declare_bool" },
+        { "kind": "block", "type": "var_declare_string" },
+        { "kind": "block", "type": "var_set" },
+        { "kind": "block", "type": "variables_get" }
+      ]
     });
   }
 
@@ -632,7 +329,7 @@ function getToolboxConfig(unlockedNodes) {
   if (isUnlocked('functions')) {
     categories.push({
       "kind": "category",
-      "name": "⚙️ Functions",
+      "name": "🟧 Functions",
       "colour": "290",
       "custom": "PROCEDURE"
     });
@@ -742,8 +439,8 @@ const initialTheme = Blockly.Theme.defineTheme('ruralTheme_initial', {
     'toolboxForegroundColour': 'var(--color-on-surface, #cdd6f4)',
     'flyoutBackgroundColour': 'var(--color-surface-container-low, #1e1e2e)',
     'flyoutForegroundColour': 'var(--color-on-surface, #cdd6f4)',
-    'scrollbarColour': 'var(--color-outline, #313244)',
-    'scrollbarOpacity': 0.6,
+    'scrollbarColour': '#6c7086',
+    'scrollbarOpacity': 0.9,
     'insertionMarkerColour': '#81c784',
     'insertionMarkerOpacity': 0.2
   }
@@ -786,6 +483,48 @@ export default function BlocklyEditor() {
         drag: false,
         wheel: true
       }
+    })
+
+    // Retrieve default procedure category callback if registered
+    const defaultCallback = workspace.getToolboxCategoryCallback
+      ? workspace.getToolboxCategoryCallback('PROCEDURE')
+      : null
+
+    // Register custom category callback for PROCEDURE to inject custom return block
+    workspace.registerToolboxCategoryCallback('PROCEDURE', (ws) => {
+      let blocksList = []
+      if (defaultCallback) {
+        try {
+          blocksList = defaultCallback(ws)
+        } catch (err) {
+          console.error('Error calling default procedure callback:', err)
+        }
+      } else if (Blockly.Procedures && typeof Blockly.Procedures.flyoutCategory === 'function') {
+        try {
+          blocksList = Blockly.Procedures.flyoutCategory(ws)
+        } catch (err) {
+          console.error('Error calling Blockly.Procedures.flyoutCategory:', err)
+        }
+      }
+      
+      // Determine if the returned blocksList contains JSON definition objects or XML nodes
+      const isJson = blocksList.length > 0 && typeof blocksList[0] === 'object' && !blocksList[0].nodeType;
+      
+      if (isJson) {
+        blocksList.push({
+          "kind": "block",
+          "type": "procedures_return"
+        })
+      } else {
+        // Fallback to XML DOM node
+        const returnBlock = Blockly.utils?.xml?.createElement
+          ? Blockly.utils.xml.createElement('block')
+          : document.createElement('block')
+        returnBlock.setAttribute('type', 'procedures_return')
+        blocksList.push(returnBlock)
+      }
+      
+      return blocksList
     })
 
     workspaceRef.current = workspace
@@ -870,8 +609,10 @@ export default function BlocklyEditor() {
         origPosition()
         
         const labelText = this.svgGroup_?.querySelector('.flyout-category-title')
+        const width = this.getWidth()
+        const height = this.getHeight()
+
         if (labelText && this.svgGroup_) {
-          const width = this.getWidth()
           labelText.setAttribute('x', (width / 2).toString())
           labelText.setAttribute('text-anchor', 'middle')
           
@@ -880,24 +621,78 @@ export default function BlocklyEditor() {
           const targetY = Math.max(currentY, 28)
           labelText.setAttribute('y', targetY.toString())
           
-          // Draw the dotted separator line
-          let line = this.svgGroup_.querySelector('.flyout-title-separator')
-          if (!line) {
-            line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-            line.setAttribute('class', 'flyout-title-separator')
-            this.svgGroup_.appendChild(line)
+          // Draw the dotted separator line as a sibling of the label text so it scrolls with it!
+          const parent = labelText.parentNode
+          if (parent) {
+            let line = parent.querySelector('.flyout-title-separator')
+            if (!line) {
+              line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+              line.setAttribute('class', 'flyout-title-separator')
+              parent.appendChild(line)
+            }
+            line.setAttribute('x1', '16')
+            line.setAttribute('y1', (targetY + 12).toString())
+            line.setAttribute('x2', (width - 16).toString())
+            line.setAttribute('y2', (targetY + 12).toString())
+            line.setAttribute('stroke', 'var(--color-outline)')
+            line.setAttribute('stroke-width', '2')
+            line.setAttribute('stroke-dasharray', '4 4')
           }
-          line.setAttribute('x1', '16')
-          line.setAttribute('y1', (targetY + 12).toString())
-          line.setAttribute('x2', (width - 16).toString())
-          line.setAttribute('y2', (targetY + 12).toString())
-          line.setAttribute('stroke', 'var(--color-outline)')
-          line.setAttribute('stroke-width', '2')
-          line.setAttribute('stroke-dasharray', '4 4')
         } else if (this.svgGroup_) {
-          const line = this.svgGroup_.querySelector('.flyout-title-separator')
-          if (line) {
-            line.remove()
+          // Remove any stray separators from the main group
+          const lines = this.svgGroup_.querySelectorAll('.flyout-title-separator')
+          lines.forEach(l => l.remove())
+        }
+
+        // Clean up any stale fade indicators from previous renders
+        if (this.svgGroup_) {
+          const staleFade = this.svgGroup_.querySelector('.flyout-bottom-fade-rect')
+          if (staleFade) staleFade.remove()
+          const staleDefs = this.svgGroup_.querySelector('.flyout-defs')
+          if (staleDefs) staleDefs.remove()
+        }
+
+        // Force the flyout scrollbar to be visible and properly styled
+        // The flyout workspace's scrollbar is at this.workspace_.scrollbar (a ScrollbarPair)
+        // The vertical scrollbar is at .vScroll with .svgHandle, .svgBackground, .outerSvg
+        const scrollbarPair = this.workspace_?.scrollbar
+        if (scrollbarPair) {
+          const vScroll = scrollbarPair.vScroll
+          if (vScroll) {
+            if (this.isVisible()) {
+              // Ensure the scrollbar is visible
+              if (typeof vScroll.setContainerVisible === 'function') {
+                vScroll.setContainerVisible(true)
+              }
+              // Style the scrollbar handle to be clearly visible
+              if (vScroll.svgHandle) {
+                vScroll.svgHandle.setAttribute('fill', '#8a8fa8')
+                vScroll.svgHandle.setAttribute('fill-opacity', '1')
+                vScroll.svgHandle.setAttribute('width', '6')
+                vScroll.svgHandle.setAttribute('rx', '3')
+                vScroll.svgHandle.setAttribute('ry', '3')
+              }
+              // Make the scrollbar track visible
+              if (vScroll.svgBackground) {
+                vScroll.svgBackground.setAttribute('fill', '#313244')
+                vScroll.svgBackground.setAttribute('fill-opacity', '0.3')
+                vScroll.svgBackground.setAttribute('width', '6')
+              }
+              // Ensure the outer SVG wrapper is displayed and on top
+              // In SVG, paint order = DOM order, so re-append to make it the last child
+              if (vScroll.outerSvg) {
+                vScroll.outerSvg.setAttribute('display', 'block')
+                const parent = vScroll.outerSvg.parentNode
+                if (parent) {
+                  parent.appendChild(vScroll.outerSvg)
+                }
+              }
+            } else {
+              // Ensure it is hidden when flyout is closed
+              if (vScroll.outerSvg) {
+                vScroll.outerSvg.setAttribute('display', 'none')
+              }
+            }
           }
         }
       }
@@ -1005,6 +800,31 @@ export default function BlocklyEditor() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Close the flyout when clicking outside the drone logic panel
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!workspaceRef.current) return
+      const flyout = workspaceRef.current.getFlyout()
+      if (!flyout || !flyout.isVisible()) return
+
+      // Check if the click target is inside the drone logic panel
+      const insidePanel = e.target.closest('.drone-logic-panel')
+      if (!insidePanel) {
+        const toolbox = workspaceRef.current.getToolbox()
+        if (toolbox && typeof toolbox.clearSelection === 'function') {
+          toolbox.clearSelection()
+        } else {
+          flyout.hide()
+        }
+      }
+    }
+
+    document.addEventListener('pointerdown', handleOutsideClick, { capture: true })
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsideClick, { capture: true })
+    }
+  }, [])
+
   // Update toolbox configuration dynamically when skills unlock
   useEffect(() => {
     if (workspaceRef.current) {
@@ -1037,8 +857,8 @@ export default function BlocklyEditor() {
           'toolboxForegroundColour': 'var(--color-on-surface, #cdd6f4)',
           'flyoutBackgroundColour': 'var(--color-surface-container-low, #1e1e2e)',
           'flyoutForegroundColour': 'var(--color-on-surface, #cdd6f4)',
-          'scrollbarColour': 'var(--color-outline, #313244)',
-          'scrollbarOpacity': 0.6,
+          'scrollbarColour': '#6c7086',
+          'scrollbarOpacity': 0.9,
           'insertionMarkerColour': colors.marker,
           'insertionMarkerOpacity': 0.2
         }
