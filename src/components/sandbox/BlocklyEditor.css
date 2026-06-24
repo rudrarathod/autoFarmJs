@@ -300,3 +300,9 @@
   image-rendering: pixelated;
   text-anchor: middle !important;
 }
+
+/* Ensure dragged blocks render on top of the flyout card */
+.blocklyDragSurface,
+.blocklyBlockDragSurface {
+  z-index: 120 !important;
+}

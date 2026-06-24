@@ -4,7 +4,7 @@ import { javascriptGenerator } from 'blockly/javascript'
 import { useGameStore } from '../../store/gameStore.js'
 import MaterialIcon from '../common/MaterialIcon.jsx'
 import './BlocklyEditor.css'
-import './customBlocks.js'
+import { validateVariableName } from './customBlocks.js'
 
 // ----------------------------------------------------
 // 1. CUSTOM FLAT RENDERER (RETRO PIXEL EDGES)
@@ -142,213 +142,242 @@ function getToolboxConfig(unlockedNodes) {
 
   const categories = [];
 
-  // Category 1: Drone Actions
-  const actionBlocks = [
-    { "kind": "block", "type": "drone_charge" },
-    {
-      "kind": "block",
-      "type": "drone_wait",
-      "inputs": {
-        "MS": {
-          "block": {
-            "type": "math_number",
-            "fields": { "NUM": 1000 }
-          }
-        }
-      }
-    }
-  ];
-
-  if (isUnlocked('movement')) {
-    actionBlocks.push({ "kind": "block", "type": "drone_move_next" });
-    actionBlocks.push({
-      "kind": "block",
-      "type": "drone_move_to",
-      "inputs": {
-        "ROW": {
-          "block": {
-            "type": "math_number",
-            "fields": { "NUM": 0 }
-          }
-        },
-        "COL": {
-          "block": {
-            "type": "math_number",
-            "fields": { "NUM": 0 }
-          }
-        }
-      }
-    });
-  }
-
-  if (isUnlocked('farmingActions')) {
-    actionBlocks.push({ "kind": "block", "type": "drone_till" });
-    actionBlocks.push({
-      "kind": "block",
-      "type": "drone_plant",
-      "fields": { "CROP": "wheat" }
-    });
-    actionBlocks.push({ "kind": "block", "type": "drone_harvest" });
-  }
-
-  categories.push({
-    "kind": "category",
-    "name": "🚁 Actions",
-    "colour": "160",
-    "contents": [
-      { "kind": "label", "text": "🚁 DRONE ACTIONS", "web-class": "flyout-category-title" },
-      ...actionBlocks
-    ]
-  });
-
-  // Category 2: Sensors
-  if (isUnlocked('sensors')) {
-    categories.push({
-      "kind": "category",
-      "name": "📡 Sensors",
-      "colour": "210",
-      "contents": [
-        { "kind": "label", "text": "📡 SENSOR BLOCKS", "web-class": "flyout-category-title" },
-        { "kind": "block", "type": "sensor_is_ripe" },
-        { "kind": "block", "type": "sensor_is_soil" },
-        { "kind": "block", "type": "sensor_is_turf" },
-        { "kind": "block", "type": "sensor_is_ore" },
-        { "kind": "block", "type": "sensor_is_growing" },
-        { "kind": "block", "type": "sensor_get_energy" },
-        { "kind": "block", "type": "sensor_grid_size" },
-        { "kind": "block", "type": "sensor_position_row" },
-        { "kind": "block", "type": "sensor_position_col" }
-      ]
-    });
-  }
-
-  // Category 3: Logic
-  const logicBlocks = [];
-  if (isUnlocked('ifStatements')) {
-    logicBlocks.push({ "kind": "block", "type": "controls_if_simple" });
-    logicBlocks.push({ "kind": "block", "type": "controls_if_else" });
-  }
-  if (isUnlocked('ifStatements') || isUnlocked('loops') || isUnlocked('whileLoops')) {
-    logicBlocks.push({ "kind": "block", "type": "logic_compare" });
-    logicBlocks.push({ "kind": "block", "type": "logic_operation" });
-    logicBlocks.push({ "kind": "block", "type": "logic_negate" });
-    logicBlocks.push({ "kind": "block", "type": "logic_boolean" });
-  }
-  logicBlocks.push({ "kind": "block", "type": "math_number" });
-  logicBlocks.push({ "kind": "block", "type": "math_arithmetic" });
-  logicBlocks.push({ "kind": "block", "type": "text" });
-  logicBlocks.push({ "kind": "block", "type": "crop_species" });
-  logicBlocks.push({ "kind": "block", "type": "tile_type" });
-
-  if (logicBlocks.length > 0) {
-    categories.push({
-      "kind": "category",
-      "name": "🟩 Logic",
-      "colour": "120",
-      "contents": [
-        { "kind": "label", "text": "🟩 LOGIC", "web-class": "flyout-category-title" },
-        ...logicBlocks
-      ]
-    });
-  }
-
-  // Category 4: Loops
-  const loopBlocks = [];
-  if (isUnlocked('loops')) {
-    loopBlocks.push({
-      "kind": "block",
-      "type": "controls_repeat_ext",
-      "inputs": {
-        "TIMES": {
-          "block": {
-            "type": "math_number",
-            "fields": { "NUM": 5 }
-          }
-        }
-      }
-    });
-  }
-  if (isUnlocked('forLoops')) {
-    loopBlocks.push({
-      "kind": "block",
-      "type": "controls_for_cpp",
-      "inputs": {
-        "START": {
-          "block": {
-            "type": "math_number",
-            "fields": { "NUM": 0 }
-          }
-        },
-        "END": {
-          "block": {
-            "type": "math_number",
-            "fields": { "NUM": 10 }
-          }
-        }
-      }
-    });
-  }
-  if (isUnlocked('whileLoops')) {
-    loopBlocks.push({
-      "kind": "block",
-      "type": "controls_while_cpp"
-    });
-  }
-
-  if (loopBlocks.length > 0) {
-    categories.push({
-      "kind": "category",
-      "name": "🟨 Loops",
-      "colour": "45",
-      "contents": [
-        { "kind": "label", "text": "🟨 LOOPS", "web-class": "flyout-category-title" },
-        ...loopBlocks
-      ]
-    });
-  }
-
-  // Category 5: Variables
-  if (isUnlocked('variables') || isUnlocked('basicVariables') || isUnlocked('advancedVariables')) {
-    categories.push({
-      "kind": "category",
-      "name": "🟦 Variables",
-      "colour": "210",
-      "contents": [
-        { "kind": "label", "text": "🟦 VARIABLES", "web-class": "flyout-category-title" },
-        { "kind": "block", "type": "var_declare_int" },
-        { "kind": "block", "type": "var_declare_float" },
-        { "kind": "block", "type": "var_declare_bool" },
-        { "kind": "block", "type": "var_declare_string" },
-        { "kind": "block", "type": "var_set" },
-        { "kind": "block", "type": "variables_get" }
-      ]
-    });
-  }
-
-  // Category 6: Functions
-  if (isUnlocked('functions')) {
-    categories.push({
-      "kind": "category",
-      "name": "🟧 Functions",
-      "colour": "290",
-      "custom": "PROCEDURE"
-    });
-  }
-
-  // Category 7: System Logging
+  // Category 1: System
   categories.push({
     "kind": "category",
     "name": "📟 System",
     "colour": "190",
     "contents": [
-      { "kind": "label", "text": "📟 SYSTEM LOGGING", "web-class": "flyout-category-title" },
+      { "kind": "label", "text": "📟 SYSTEM", "web-class": "flyout-category-title" },
+      { "kind": "block", "type": "arduino_setup" },
+      { "kind": "block", "type": "arduino_loop" },
       {
         "kind": "block",
-        "type": "serial_print",
+        "type": "time_delay",
         "inputs": {
-          "MSG": {
+          "MS": {
             "block": {
-              "type": "text",
+              "type": "number_constant_cpp",
+              "fields": { "NUM": 1000 }
+            }
+          }
+        }
+      },
+      { "kind": "block", "type": "system_return" }
+    ]
+  });
+
+  // Category 2: Drone
+  categories.push({
+    "kind": "category",
+    "name": "🚁 Drone",
+    "colour": "160",
+    "contents": [
+      { "kind": "label", "text": "🚁 DRONE", "web-class": "flyout-category-title" },
+      { "kind": "block", "type": "drone_till" },
+      {
+        "kind": "block",
+        "type": "drone_plant",
+        "fields": { "CROP": "wheat" }
+      },
+      { "kind": "block", "type": "drone_harvest" },
+      { "kind": "block", "type": "drone_move_next" },
+      {
+        "kind": "block",
+        "type": "drone_move_to",
+        "inputs": {
+          "ROW": {
+            "block": {
+              "type": "number_constant_cpp",
+              "fields": { "NUM": 0 }
+            }
+          },
+          "COL": {
+            "block": {
+              "type": "number_constant_cpp",
+              "fields": { "NUM": 0 }
+            }
+          }
+        }
+      },
+      { "kind": "block", "type": "drone_charge" }
+    ]
+  });
+
+  // Category 3: Sensors
+  categories.push({
+    "kind": "category",
+    "name": "📡 Sensors",
+    "colour": "210",
+    "contents": [
+      { "kind": "label", "text": "📡 SENSORS", "web-class": "flyout-category-title" },
+      { "kind": "block", "type": "sensor_is_turf" },
+      { "kind": "block", "type": "sensor_is_soil" },
+      { "kind": "block", "type": "sensor_is_growing" },
+      { "kind": "block", "type": "sensor_is_ripe" },
+      { "kind": "block", "type": "sensor_is_ore" },
+      { "kind": "block", "type": "sensor_get_energy" },
+      { "kind": "block", "type": "sensor_position_row" },
+      { "kind": "block", "type": "sensor_position_col" },
+      { "kind": "block", "type": "sensor_grid_size" }
+    ]
+  });
+
+  // Category 4: Variables
+  categories.push({
+    "kind": "category",
+    "name": "🟦 Variables",
+    "colour": "210",
+    "contents": [
+      { "kind": "label", "text": "🟦 VARIABLES", "web-class": "flyout-category-title" },
+      {
+        "kind": "block",
+        "type": "var_declare_int",
+        "inputs": {
+          "VALUE": {
+            "block": {
+              "type": "number_constant_cpp",
+              "fields": { "NUM": 0 }
+            }
+          }
+        }
+      },
+      {
+        "kind": "block",
+        "type": "var_declare_float",
+        "inputs": {
+          "VALUE": {
+            "block": {
+              "type": "number_constant_cpp",
+              "fields": { "NUM": 0 }
+            }
+          }
+        }
+      },
+      {
+        "kind": "block",
+        "type": "var_declare_bool",
+        "inputs": {
+          "VALUE": {
+            "block": {
+              "type": "logic_boolean_cpp",
+              "fields": { "BOOL": "FALSE" }
+            }
+          }
+        }
+      },
+      {
+        "kind": "block",
+        "type": "var_declare_string",
+        "inputs": {
+          "VALUE": {
+            "block": {
+              "type": "crop_species",
+              "fields": { "CROP": "wheat" }
+            }
+          }
+        }
+      },
+      { "kind": "block", "type": "var_set" },
+      { "kind": "block", "type": "variables_get" }
+    ]
+  });
+
+  // Category 5: Logic
+  categories.push({
+    "kind": "category",
+    "name": "🟩 Logic",
+    "colour": "120",
+    "contents": [
+      { "kind": "label", "text": "🟩 LOGIC", "web-class": "flyout-category-title" },
+      { "kind": "block", "type": "controls_if_simple" },
+      { "kind": "block", "type": "controls_if_else" },
+      { "kind": "block", "type": "logic_compare_cpp" },
+      { "kind": "block", "type": "logic_operation_cpp" },
+      { "kind": "block", "type": "logic_negate_cpp" },
+      { "kind": "block", "type": "logic_boolean_cpp" }
+    ]
+  });
+
+  // Category 6: Loops
+  categories.push({
+    "kind": "category",
+    "name": "🟨 Loops",
+    "colour": "45",
+    "contents": [
+      { "kind": "label", "text": "🟨 LOOPS", "web-class": "flyout-category-title" },
+      {
+        "kind": "block",
+        "type": "controls_for_cpp",
+        "inputs": {
+          "START": {
+            "block": {
+              "type": "number_constant_cpp",
+              "fields": { "NUM": 0 }
+            }
+          },
+          "END": {
+            "block": {
+              "type": "number_constant_cpp",
+              "fields": { "NUM": 10 }
+            }
+          }
+        }
+      },
+      { "kind": "block", "type": "controls_while_cpp" },
+      { "kind": "block", "type": "loop_control" }
+    ]
+  });
+
+  // Category 7: Functions
+  categories.push({
+    "kind": "category",
+    "name": "🟧 Functions",
+    "colour": "290",
+    "custom": "PROCEDURE"
+  });
+
+  // Category 8: Constants
+  categories.push({
+    "kind": "category",
+    "name": "💎 Constants",
+    "colour": "180",
+    "contents": [
+      { "kind": "label", "text": "💎 CONSTANTS", "web-class": "flyout-category-title" },
+      { "kind": "block", "type": "crop_species" },
+      { "kind": "block", "type": "tile_type_constant" },
+      { "kind": "block", "type": "number_constant_cpp" },
+      { "kind": "block", "type": "string_constant_cpp" }
+    ]
+  });
+
+  // Category 9: Operators
+  categories.push({
+    "kind": "category",
+    "name": "➕ Operators",
+    "colour": "230",
+    "contents": [
+      { "kind": "label", "text": "➕ OPERATORS", "web-class": "flyout-category-title" },
+      { "kind": "block", "type": "operator_arithmetic_cpp" },
+      { "kind": "block", "type": "operator_inc_dec_cpp" },
+      { "kind": "block", "type": "operator_compound_cpp" }
+    ]
+  });
+
+  // Category 10: Debug
+  categories.push({
+    "kind": "category",
+    "name": "🐞 Debug",
+    "colour": "190",
+    "contents": [
+      { "kind": "label", "text": "🐞 DEBUG", "web-class": "flyout-category-title" },
+      {
+        "kind": "block",
+        "type": "serial_debug_cpp",
+        "inputs": {
+          "VALUE": {
+            "block": {
+              "type": "string_constant_cpp",
               "fields": { "TEXT": "hello" }
             }
           }
@@ -508,20 +537,34 @@ export default function BlocklyEditor() {
       }
       
       // Determine if the returned blocksList contains JSON definition objects or XML nodes
-      const isJson = blocksList.length > 0 && typeof blocksList[0] === 'object' && !blocksList[0].nodeType;
+      const isJson = blocksList.length > 0
+        ? (typeof blocksList[0] === 'object' && !blocksList[0].nodeType)
+        : true;
       
       if (isJson) {
+        blocksList.unshift({
+          "kind": "label",
+          "text": "🟧 FUNCTIONS",
+          "web-class": "flyout-category-title"
+        });
         blocksList.push({
           "kind": "block",
           "type": "procedures_return"
-        })
+        });
       } else {
         // Fallback to XML DOM node
+        const labelBlock = Blockly.utils?.xml?.createElement
+          ? Blockly.utils.xml.createElement('label')
+          : document.createElement('label');
+        labelBlock.setAttribute('text', '🟧 FUNCTIONS');
+        labelBlock.setAttribute('web-class', 'flyout-category-title');
+        blocksList.unshift(labelBlock);
+
         const returnBlock = Blockly.utils?.xml?.createElement
           ? Blockly.utils.xml.createElement('block')
-          : document.createElement('block')
-        returnBlock.setAttribute('type', 'procedures_return')
-        blocksList.push(returnBlock)
+          : document.createElement('block');
+        returnBlock.setAttribute('type', 'procedures_return');
+        blocksList.push(returnBlock);
       }
       
       return blocksList
@@ -545,6 +588,14 @@ export default function BlocklyEditor() {
         if (!this.isVisible()) return 0
         const gap = 16 // Margin between flyout and panel
         return -this.getWidth() - gap
+      }
+
+      // Override getWidth to enforce a minimum width so long category titles don't overflow!
+      const origGetWidth = flyout.getWidth.bind(flyout)
+      flyout.getWidth = function () {
+        const baseWidth = origGetWidth()
+        // Ensure minimum width of 280px to accommodate long custom C++ category titles
+        return Math.max(baseWidth, 280)
       }
 
       // Override getFlyoutScale to prevent the flyout blocks from resizing with workspace zoom
@@ -779,7 +830,23 @@ export default function BlocklyEditor() {
       }
     }
 
+    // Listener to sanitize variable names on create/rename to enforce C++ identifiers
+    const handleVariableValidation = (event) => {
+      if (event.type === Blockly.Events.VAR_RENAME) {
+        const sanitized = validateVariableName(event.newName)
+        if (sanitized && sanitized !== event.newName) {
+          workspace.renameVariableById(event.varId, sanitized)
+        }
+      } else if (event.type === Blockly.Events.VAR_CREATE) {
+        const sanitized = validateVariableName(event.varName)
+        if (sanitized && sanitized !== event.varName) {
+          workspace.renameVariableById(event.varId, sanitized)
+        }
+      }
+    }
+
     workspace.addChangeListener(handleWorkspaceChange)
+    workspace.addChangeListener(handleVariableValidation)
 
     // Handle resizing
     let resizeTimeout = null
@@ -795,6 +862,7 @@ export default function BlocklyEditor() {
     return () => {
       if (resizeTimeout) clearTimeout(resizeTimeout)
       workspace.removeChangeListener(handleWorkspaceChange)
+      workspace.removeChangeListener(handleVariableValidation)
       resizeObserver.disconnect()
       workspace.dispose()
     }
