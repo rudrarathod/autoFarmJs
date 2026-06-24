@@ -572,6 +572,8 @@ export default function BlocklyEditor() {
 
     workspaceRef.current = workspace
 
+    let transformObserver = null
+
     // Monkey-patch flyout to open to the LEFT (outside the drone logic panel).
     // Strategy: Override getX() on the flyout so Blockly positions it at
     // negative X (to the left of the toolbox). Also fix parent element overflow
@@ -645,6 +647,64 @@ export default function BlocklyEditor() {
       if (blocklySvg) {
         blocklySvg.style.overflow = 'visible'
         blocklySvg.setAttribute('overflow', 'visible')
+
+        // Ensure there's a clipPath for workspace blocks so they don't overflow the canvas
+        let defs = blocklySvg.querySelector('defs')
+        if (!defs) {
+          defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
+          blocklySvg.insertBefore(defs, blocklySvg.firstChild)
+        }
+        
+        let clipPath = defs.querySelector('#blocklyWorkspaceClip')
+        if (!clipPath) {
+          clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath')
+          clipPath.setAttribute('id', 'blocklyWorkspaceClip')
+          clipPath.setAttribute('clipPathUnits', 'userSpaceOnUse')
+          
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+          rect.setAttribute('x', '0')
+          rect.setAttribute('y', '0')
+          rect.setAttribute('width', '100%')
+          rect.setAttribute('height', '100%')
+          
+          clipPath.appendChild(rect)
+          defs.appendChild(clipPath)
+        }
+
+        // Set up MutationObserver to compute and set the inverse transform on the clip rect
+        // This cancels out workspace canvas scrolling/zooming translations so clipping stays static at (0, 0)
+        const canvas = blocklySvg.querySelector('.blocklyBlockCanvas')
+        const rect = clipPath.querySelector('rect')
+        
+        if (canvas && rect) {
+          if (transformObserver) {
+            transformObserver.disconnect()
+          }
+
+          const updateClipRect = () => {
+            const transform = canvas.getAttribute('transform') || ''
+            let tx = 0, ty = 0, scale = 1
+            
+            const translateMatch = transform.match(/translate\(([^,)]+),?([^)]+)?\)/)
+            if (translateMatch) {
+              tx = parseFloat(translateMatch[1])
+              ty = translateMatch[2] ? parseFloat(translateMatch[2]) : 0
+            }
+            
+            const scaleMatch = transform.match(/scale\(([^)]+)\)/)
+            if (scaleMatch) {
+              scale = parseFloat(scaleMatch[1])
+            }
+            
+            // Set the inverse transform on the rect: scale(1/scale) translate(-tx, -ty)
+            rect.setAttribute('transform', `scale(${1 / scale}) translate(${-tx}, ${-ty})`)
+          }
+          
+          updateClipRect()
+          
+          transformObserver = new MutationObserver(updateClipRect)
+          transformObserver.observe(canvas, { attributes: true, attributeFilter: ['transform'] })
+        }
       }
       // Ensure the flyout SVG group itself has no clipping
       if (flyout.svgGroup_) {
@@ -861,6 +921,7 @@ export default function BlocklyEditor() {
 
     return () => {
       if (resizeTimeout) clearTimeout(resizeTimeout)
+      if (transformObserver) transformObserver.disconnect()
       workspace.removeChangeListener(handleWorkspaceChange)
       workspace.removeChangeListener(handleVariableValidation)
       resizeObserver.disconnect()
