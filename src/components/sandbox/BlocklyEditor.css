@@ -4,7 +4,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background-color: #1e1e2e;
+  background-color: var(--color-surface-container-low, var(--color-surface, #1e1e2e));
   min-height: 0;
   overflow: hidden;
 }
@@ -17,20 +17,20 @@
 
 /* Custom styles for Blockly SVG elements */
 .blocklyToolboxDiv {
-  background-color: #191a24 !important;
+  background-color: var(--color-surface-container, var(--color-surface, #191a24)) !important;
   border-right: 2px solid var(--color-outline) !important;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1) !important;
   padding: 8px 4px !important;
   width: 140px !important; /* Force a consistent width */
   box-sizing: border-box;
 }
 
-/* Force category label colors to high contrast Catppuccin Text */
+/* Force category label colors to match theme foreground */
 .blocklyToolboxDiv .blocklyTreeLabel,
 .blocklyToolboxDiv .blocklyTreeRow,
 .blocklyToolboxDiv span,
 .blocklyToolboxDiv div {
-  color: #cdd6f4 !important;
+  color: var(--color-on-surface, #cdd6f4) !important;
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 13px !important;
   font-weight: 700 !important;
@@ -68,27 +68,27 @@
 
 /* Flat sharp corners for flyouts */
 .blocklyFlyoutBackground {
-  fill: #15161e !important;
+  fill: var(--color-surface-container-high, var(--color-surface, #15161e)) !important;
   fill-opacity: 0.95 !important;
   border-right: 2px solid var(--color-outline) !important;
 }
 
 /* Dropdown styling */
 .blocklyWidgetDiv .blocklyDropdownMenu {
-  background-color: #21222c !important;
+  background-color: var(--color-surface-container, var(--color-surface, #21222c)) !important;
   border: 2px solid var(--color-outline) !important;
   border-radius: 0px !important; /* Flat edges */
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2) !important;
 }
 
 .blocklyDropdownMenuItem {
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 13px !important;
-  color: #abb2bf !important;
+  color: var(--color-on-surface, #abb2bf) !important;
 }
 
 .blocklyDropdownMenuItemContent {
-  color: #abb2bf !important;
+  color: var(--color-on-surface, #abb2bf) !important;
 }
 
 .blocklyDropdownMenuItem:hover {
@@ -100,27 +100,77 @@
 }
 
 /* Zoom controls rendering */
-rect.blocklyZoomBackground {
-  fill: #191a24 !important;
-  stroke: var(--color-outline) !important;
+.blocklyZoomBackground,
+.blocklyZoom>circle,
+.blocklyZoom>rect {
+  display: block !important;
+  fill: #2b2d35 !important;
+  stroke: #4f525d !important;
   stroke-width: 2px !important;
-  rx: 0px !important;
-  ry: 0px !important;
+  r: 16px !important; /* Force uniform circle size (32px diameter) */
+  cx: 16px !important;
+  cy: 16px !important;
+  width: 32px !important;
+  height: 32px !important;
+  rx: 4px !important; /* In case it renders as rect */
+  ry: 4px !important;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+  cursor: pointer;
+}
+
+.blocklyZoom:hover .blocklyZoomBackground,
+.blocklyZoom:hover>circle,
+.blocklyZoom:hover>rect {
+  fill: var(--color-meadow-green, #4caf50) !important;
+  stroke: var(--color-meadow-green, #4caf50) !important;
+}
+
+/* Make the icons inside zoom buttons proper and white */
+.blocklyZoom image {
+  filter: brightness(0) invert(1) !important; /* Invert dark grey icon to clean white */
+  opacity: 0.8 !important;
+  transition: opacity 0.2s ease !important;
+  cursor: pointer;
+}
+
+.blocklyZoom:hover image {
+  opacity: 1 !important;
+}
+
+/* Trashcan icon styling */
+.blocklyTrash {
+  cursor: pointer;
+}
+
+.blocklyTrash image {
+  filter: brightness(0) invert(1) !important;
+  opacity: 0.65;
+  transition: opacity 0.2s ease;
+}
+
+.blocklyTrash:hover image {
+  opacity: 1;
 }
 
 /* Custom scrollbars */
 .blocklyScrollbarHandle {
-  fill: #313244 !important;
+  fill: var(--color-outline, #313244) !important;
+  opacity: 0.3 !important;
   rx: 0px !important;
   ry: 0px !important;
 }
 
 .blocklyScrollbarHandle:hover {
-  fill: #45475a !important;
+  opacity: 0.6 !important;
 }
 
 .blocklyScrollbarBackground {
   opacity: 0 !important;
+}
+
+/* Match workspace grid lines to active theme */
+.blocklyGridLine {
+  stroke: var(--color-outline-variant, #3e4451) !important;
 }
 
 /* Make block borders and lines sharp and clear */
@@ -139,4 +189,61 @@ rect.blocklyZoomBackground {
 .blocklySelected>.blocklyPath {
   stroke: var(--color-meadow-green) !important;
   stroke-width: 3px !important;
+}
+
+/* Custom floating controls to match sandbox tool styles */
+.blockly-editor__controls {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 50; /* Above Blockly canvas elements */
+  pointer-events: auto;
+}
+
+.blockly-editor__control-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50% !important;
+  background-color: var(--color-surface, #ffffff) !important;
+  color: var(--color-primary, #3c2a21) !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  cursor: pointer;
+  outline: none;
+}
+
+.blockly-editor__control-btn--danger {
+  color: var(--color-error, #ba1a1a) !important;
+}
+
+/* ---- Classic Amber CRT Theme override for blocks ---- */
+[data-theme='classic-amber'] .blocklyPath {
+  fill: #050400 !important;
+  stroke: #ffb000 !important;
+  stroke-width: 2px !important;
+}
+
+[data-theme='classic-amber'] .blocklySelected>.blocklyPath {
+  stroke: #ffb000 !important;
+  stroke-width: 4px !important;
+}
+
+[data-theme='classic-amber'] .blocklyTreeRow.blocklyTreeSelected {
+  background-color: rgba(255, 176, 0, 0.15) !important;
+  border-color: #ffb000 !important;
+}
+
+[data-theme='classic-amber'] .blocklyTreeRow.blocklyTreeSelected .blocklyTreeLabel {
+  color: #ffb000 !important;
+}
+
+/* ---- Cyber Punk Theme tweaks for category text color ---- */
+[data-theme='cyber-punk'] .blocklyToolboxDiv .blocklyTreeLabel {
+  text-shadow: 0 0 4px #00ffff;
 }

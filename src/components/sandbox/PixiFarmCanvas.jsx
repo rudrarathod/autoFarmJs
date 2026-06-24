@@ -118,6 +118,8 @@ export default function PixiFarmCanvas({ interactive = true }) {
     let unsubscribeZoom = null
     let unsubscribeDrone = null
     let growInterval = null
+    let resizeObserver = null
+    let handlePanelResize = null
 
     async function initPixi() {
       const newApp = new Application()
@@ -201,6 +203,26 @@ export default function PixiFarmCanvas({ interactive = true }) {
       if (sandbox.viewportContainer) {
         sandbox.viewportContainer.scale.set(initialZoom)
       }
+
+      // Initialize visible-area center alignment based on panel dimensions
+      let lastPanelWidth = (() => {
+        const saved = localStorage.getItem('drone-logic-panel-width')
+        return saved ? parseInt(saved, 10) : 520
+      })()
+      let lastPanelHeight = (() => {
+        const saved = localStorage.getItem('drone-logic-panel-height')
+        return saved ? parseInt(saved, 10) : Math.floor(window.innerHeight * 0.5)
+      })()
+
+      if (sandbox.viewportContainer) {
+        if (window.innerWidth >= 1024) {
+          sandbox.viewportContainer.x = app.screen.width / 2 - lastPanelWidth / 2
+          sandbox.viewportContainer.y = app.screen.height / 2
+        } else {
+          sandbox.viewportContainer.x = app.screen.width / 2
+          sandbox.viewportContainer.y = app.screen.height / 2 - lastPanelHeight / 2
+        }
+      }
       
       // Subscribe to store state changes to update textures dynamically
       unsubscribeStore = useGameStore.subscribe((state) => {
@@ -212,8 +234,13 @@ export default function PixiFarmCanvas({ interactive = true }) {
         if (sandbox.viewportContainer) {
           sandbox.viewportContainer.scale.set(state.zoom || 1.0)
           if (state.zoom === 1.0 && app) {
-            sandbox.viewportContainer.x = app.screen.width / 2
-            sandbox.viewportContainer.y = app.screen.height / 2
+            if (window.innerWidth >= 1024) {
+              sandbox.viewportContainer.x = app.screen.width / 2 - lastPanelWidth / 2
+              sandbox.viewportContainer.y = app.screen.height / 2
+            } else {
+              sandbox.viewportContainer.x = app.screen.width / 2
+              sandbox.viewportContainer.y = app.screen.height / 2 - lastPanelHeight / 2
+            }
           }
         }
       })
@@ -243,6 +270,47 @@ export default function PixiFarmCanvas({ interactive = true }) {
         useGameStore.getState().growCrops()
       }, 5000)
 
+      // Set up ResizeObserver to keep viewportContainer centered in visible area when window/container resizes
+      let lastWidth = canvasRef.current ? canvasRef.current.clientWidth : 0
+      let lastHeight = canvasRef.current ? canvasRef.current.clientHeight : 0
+
+      resizeObserver = new ResizeObserver(() => {
+        if (canvasRef.current && sandbox.viewportContainer) {
+          const currentWidth = canvasRef.current.clientWidth
+          const currentHeight = canvasRef.current.clientHeight
+          const deltaX = currentWidth - lastWidth
+          const deltaY = currentHeight - lastHeight
+
+          sandbox.viewportContainer.x += deltaX / 2
+          sandbox.viewportContainer.y += deltaY / 2
+
+          lastWidth = currentWidth
+          lastHeight = currentHeight
+        }
+      })
+      if (canvasRef.current) {
+        resizeObserver.observe(canvasRef.current)
+      }
+
+      // Handle custom panel resize event to dynamically shift viewport center
+      handlePanelResize = (e) => {
+        if (sandbox.viewportContainer) {
+          const { width: newPanelWidth, height: newPanelHeight } = e.detail
+          
+          if (window.innerWidth >= 1024) {
+            const deltaPanelWidth = newPanelWidth - lastPanelWidth
+            sandbox.viewportContainer.x -= deltaPanelWidth / 2
+          } else {
+            const deltaPanelHeight = newPanelHeight - lastPanelHeight
+            sandbox.viewportContainer.y -= deltaPanelHeight / 2
+          }
+          
+          lastPanelWidth = newPanelWidth
+          lastPanelHeight = newPanelHeight
+        }
+      }
+      window.addEventListener('drone-panel-resize', handlePanelResize)
+
       setIsReady(true)
     }
 
@@ -254,6 +322,10 @@ export default function PixiFarmCanvas({ interactive = true }) {
       if (unsubscribeZoom) unsubscribeZoom()
       if (unsubscribeDrone) unsubscribeDrone()
       if (growInterval) clearInterval(growInterval)
+      if (resizeObserver) resizeObserver.disconnect()
+      if (handlePanelResize) {
+        window.removeEventListener('drone-panel-resize', handlePanelResize)
+      }
       if (app) {
         app.destroy(true, { children: true })
       }

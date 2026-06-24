@@ -30,6 +30,71 @@ export default function DroneLogicPanel() {
   const monacoRef = useRef(null)
   const decorationsRef = useRef([])
 
+  // Resizable state and handlers
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
+  const [width, setWidth] = useState(() => {
+    const saved = localStorage.getItem('drone-logic-panel-width')
+    return saved ? parseInt(saved, 10) : 520
+  })
+  const [height, setHeight] = useState(() => {
+    const saved = localStorage.getItem('drone-logic-panel-height')
+    return saved ? parseInt(saved, 10) : Math.floor(window.innerHeight * 0.5)
+  })
+  const [isDragging, setIsDragging] = useState(false)
+
+  useEffect(() => {
+    const checkLayout = () => {
+      setIsDesktop(window.innerWidth >= 1024)
+    }
+    window.addEventListener('resize', checkLayout)
+    return () => window.removeEventListener('resize', checkLayout)
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--drone-panel-width', `${width}px`)
+    document.documentElement.style.setProperty('--drone-panel-height', `${height}px`)
+    window.dispatchEvent(new CustomEvent('drone-panel-resize', { detail: { width, height } }))
+  }, [width, height, isDesktop])
+
+  const handlePointerDown = useCallback((e) => {
+    e.preventDefault()
+    setIsDragging(true)
+
+    const startX = e.clientX
+    const startY = e.clientY
+    const startWidth = width
+    const startHeight = height
+
+    const handlePointerMove = (moveEvent) => {
+      if (window.innerWidth >= 1024) {
+        const deltaX = moveEvent.clientX - startX
+        const newWidth = startWidth - deltaX
+        const minWidth = 320
+        const maxWidth = window.innerWidth - 300 // Leave at least 300px for canvas
+        const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth))
+        setWidth(clampedWidth)
+        localStorage.setItem('drone-logic-panel-width', clampedWidth.toString())
+      } else {
+        const deltaY = moveEvent.clientY - startY
+        const newHeight = startHeight - deltaY
+        const minHeight = 150
+        const maxHeight = window.innerHeight - 150 // Leave at least 150px for canvas
+        const clampedHeight = Math.max(minHeight, Math.min(maxHeight, newHeight))
+        setHeight(clampedHeight)
+        localStorage.setItem('drone-logic-panel-height', clampedHeight.toString())
+      }
+    }
+
+    const handlePointerUp = () => {
+      setIsDragging(false)
+      document.removeEventListener('pointermove', handlePointerMove)
+      document.removeEventListener('pointerup', handlePointerUp)
+    }
+
+    document.addEventListener('pointermove', handlePointerMove)
+    document.addEventListener('pointerup', handlePointerUp)
+  }, [width, height])
+
   // Auto-scroll console to bottom
   useEffect(() => {
     if (consoleEndRef.current && activeTab === 'console') {
@@ -283,8 +348,20 @@ export default function DroneLogicPanel() {
   }
 
 
+  const panelStyle = {
+    width: isDesktop ? `${width}px` : '100%',
+    height: isDesktop ? '100%' : `${height}px`,
+  }
+
   return (
-    <aside className="drone-logic-panel">
+    <aside className="drone-logic-panel" style={panelStyle}>
+      {/* Drag handle for resizing */}
+      <div
+        className={`drone-logic-panel__resize-handle ${
+          isDesktop ? 'drone-logic-panel__resize-handle--horizontal' : 'drone-logic-panel__resize-handle--vertical'
+        } ${isDragging ? 'drone-logic-panel__resize-handle--dragging' : ''}`}
+        onPointerDown={handlePointerDown}
+      />
       {/* Panel Header */}
       <div className="drone-logic-panel__header">
         <div className="drone-logic-panel__header-left">

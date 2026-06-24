@@ -11,6 +11,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
 .sandbox-page__canvas-area {
@@ -27,6 +28,13 @@
   display: flex;
   gap: 8px;
   z-index: 10;
+  transition: bottom 0.05s ease-out;
+}
+
+@media (max-width: 1023px) {
+  .sandbox-page__canvas-tools {
+    bottom: calc(var(--drone-panel-height, 50%) + 16px);
+  }
 }
 
 .sandbox-page__tool-btn {
@@ -137,6 +145,13 @@
   border-radius: 4px;
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
   min-width: 140px;
+  transition: right 0.05s ease-out;
+}
+
+@media (min-width: 1024px) {
+  .sandbox-page__inventory {
+    right: calc(var(--drone-panel-width, 520px) + 16px);
+  }
 }
 
 .sandbox-page__inventory-title {

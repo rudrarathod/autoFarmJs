@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import * as Blockly from 'blockly'
 import { javascriptGenerator } from 'blockly/javascript'
 import { useGameStore } from '../../store/gameStore.js'
+import MaterialIcon from '../common/MaterialIcon.jsx'
 import './BlocklyEditor.css'
 
 // ----------------------------------------------------
@@ -680,12 +681,12 @@ const theme = Blockly.Theme.defineTheme('ruralDark', {
     }
   },
   'componentStyles': {
-    'workspaceBackgroundColour': '#1e1e2e',
-    'toolboxBackgroundColour': '#191a24',
-    'toolboxForegroundColour': '#cdd6f4',
-    'flyoutBackgroundColour': '#1e1e2e',
-    'flyoutForegroundColour': '#cdd6f4',
-    'scrollbarColour': '#313244',
+    'workspaceBackgroundColour': 'transparent',
+    'toolboxBackgroundColour': 'transparent',
+    'toolboxForegroundColour': 'transparent',
+    'flyoutBackgroundColour': 'transparent',
+    'flyoutForegroundColour': 'transparent',
+    'scrollbarColour': 'transparent',
     'scrollbarOpacity': 0.6,
     'insertionMarkerColour': '#a6e3a1',
     'insertionMarkerOpacity': 0.2
@@ -715,14 +716,14 @@ export default function BlocklyEditor() {
         snap: true
       },
       zoom: {
-        controls: true,
+        controls: false,
         wheel: true,
         startScale: 1.0,
         maxScale: 3,
         minScale: 0.3,
         scaleSpeed: 1.2
       },
-      trashcan: true,
+      trashcan: false,
       move: {
         scrollbars: true,
         drag: true,
@@ -785,6 +786,61 @@ export default function BlocklyEditor() {
   return (
     <div className="blockly-editor-container">
       <div ref={blocklyDivRef} className="blockly-editor-workspace" />
+      
+      {/* Custom floating controls to match sandbox tool styles */}
+      <div className="blockly-editor__controls">
+        <button
+          className="blockly-editor__control-btn pixel-border btn-press"
+          onClick={() => {
+            if (workspaceRef.current) {
+              workspaceRef.current.zoomToFit()
+              workspaceRef.current.scrollCenter()
+            }
+          }}
+          title="Recenter / Zoom to Fit"
+        >
+          <MaterialIcon icon="center_focus_strong" />
+        </button>
+        <button
+          className="blockly-editor__control-btn pixel-border btn-press"
+          onClick={() => {
+            if (workspaceRef.current) {
+              workspaceRef.current.zoomCenter(1)
+            }
+          }}
+          title="Zoom In"
+        >
+          <MaterialIcon icon="zoom_in" />
+        </button>
+        <button
+          className="blockly-editor__control-btn pixel-border btn-press"
+          onClick={() => {
+            if (workspaceRef.current) {
+              workspaceRef.current.zoomCenter(-1)
+            }
+          }}
+          title="Zoom Out"
+        >
+          <MaterialIcon icon="zoom_out" />
+        </button>
+        <button
+          className="blockly-editor__control-btn blockly-editor__control-btn--danger pixel-border btn-press"
+          onClick={() => {
+            if (workspaceRef.current) {
+              if (window.confirm("Are you sure you want to clear all blocks from the workspace?")) {
+                workspaceRef.current.clear()
+                // Force code sync to game state
+                const code = javascriptGenerator.workspaceToCode(workspaceRef.current)
+                useGameStore.getState().setDroneScript(code)
+                useGameStore.setState({ droneBlocklyWorkspace: null })
+              }
+            }
+          }}
+          title="Clear Workspace"
+        >
+          <MaterialIcon icon="delete" />
+        </button>
+      </div>
     </div>
   )
 }
