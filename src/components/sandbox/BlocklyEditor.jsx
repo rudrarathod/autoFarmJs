@@ -450,6 +450,26 @@ const DEFAULT_WORKSPACE_STATE = {
   }
 }
 
+const CLEAN_WORKSPACE_STATE = {
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "arduino_setup",
+        "x": 20,
+        "y": 20,
+        "deletable": false,
+        "next": {
+          "block": {
+            "type": "arduino_loop",
+            "deletable": false
+          }
+        }
+      }
+    ]
+  }
+}
+
 // ----------------------------------------------------
 // 5. DYNAMIC TOOLBOX GENERATION
 // ----------------------------------------------------
@@ -511,7 +531,10 @@ function getToolboxConfig(unlockedNodes) {
     "kind": "category",
     "name": "🚁 Actions",
     "colour": "160",
-    "contents": actionBlocks
+    "contents": [
+      { "kind": "label", "text": "🚁 DRONE ACTIONS", "web-class": "flyout-category-title" },
+      ...actionBlocks
+    ]
   });
 
   // Category 2: Sensors
@@ -521,6 +544,7 @@ function getToolboxConfig(unlockedNodes) {
       "name": "📡 Sensors",
       "colour": "210",
       "contents": [
+        { "kind": "label", "text": "📡 SENSOR BLOCKS", "web-class": "flyout-category-title" },
         { "kind": "block", "type": "sensor_is_ripe" },
         { "kind": "block", "type": "sensor_is_soil" },
         { "kind": "block", "type": "sensor_is_turf" },
@@ -565,7 +589,10 @@ function getToolboxConfig(unlockedNodes) {
       "kind": "category",
       "name": "🎛️ Control",
       "colour": "120",
-      "contents": controlBlocks
+      "contents": [
+        { "kind": "label", "text": "🎛️ CONTROL FLOW", "web-class": "flyout-category-title" },
+        ...controlBlocks
+      ]
     });
   }
 
@@ -585,7 +612,10 @@ function getToolboxConfig(unlockedNodes) {
     "kind": "category",
     "name": "🧮 Logic & Math",
     "colour": "230",
-    "contents": utilityBlocks
+    "contents": [
+      { "kind": "label", "text": "🧮 LOGIC & MATH", "web-class": "flyout-category-title" },
+      ...utilityBlocks
+    ]
   });
 
   // Category 5: Variables
@@ -614,6 +644,7 @@ function getToolboxConfig(unlockedNodes) {
     "name": "📟 System",
     "colour": "190",
     "contents": [
+      { "kind": "label", "text": "📟 SYSTEM LOGGING", "web-class": "flyout-category-title" },
       {
         "kind": "block",
         "type": "serial_print",
@@ -777,6 +808,11 @@ export default function BlocklyEditor() {
         return -this.getWidth() - gap
       }
 
+      // Override getFlyoutScale to prevent the flyout blocks from resizing with workspace zoom
+      flyout.getFlyoutScale = function () {
+        return 1.0
+      }
+
       // Custom rounded background path with top/bottom margins
       flyout.setBackgroundPath_ = function (width, height) {
         const margin = 12
@@ -828,6 +864,59 @@ export default function BlocklyEditor() {
 
       flyout.autoClose = false
 
+      // Override position to align the title centered and draw a separator line
+      const origPosition = flyout.position.bind(flyout)
+      flyout.position = function () {
+        origPosition()
+        
+        const labelText = this.svgGroup_?.querySelector('.flyout-category-title')
+        if (labelText && this.svgGroup_) {
+          const width = this.getWidth()
+          labelText.setAttribute('x', (width / 2).toString())
+          labelText.setAttribute('text-anchor', 'middle')
+          
+          // Shift the title text down slightly to fit beautifully within our floating card top margin
+          const currentY = parseFloat(labelText.getAttribute('y') || '0')
+          const targetY = Math.max(currentY, 28)
+          labelText.setAttribute('y', targetY.toString())
+          
+          // Draw the dotted separator line
+          let line = this.svgGroup_.querySelector('.flyout-title-separator')
+          if (!line) {
+            line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+            line.setAttribute('class', 'flyout-title-separator')
+            this.svgGroup_.appendChild(line)
+          }
+          line.setAttribute('x1', '16')
+          line.setAttribute('y1', (targetY + 12).toString())
+          line.setAttribute('x2', (width - 16).toString())
+          line.setAttribute('y2', (targetY + 12).toString())
+          line.setAttribute('stroke', 'var(--color-outline)')
+          line.setAttribute('stroke-width', '2')
+          line.setAttribute('stroke-dasharray', '4 4')
+        } else if (this.svgGroup_) {
+          const line = this.svgGroup_.querySelector('.flyout-title-separator')
+          if (line) {
+            line.remove()
+          }
+        }
+      }
+
+      // Override MetricsManager.getFlyoutMetrics to report 0 width.
+      // This stops Blockly from shifting/scrolling the workspace blocks to the right
+      // when the flyout opens.
+      const metricsManager = workspace.getMetricsManager()
+      if (metricsManager) {
+        metricsManager.getFlyoutMetrics = function () {
+          return {
+            width: 0,
+            height: 0,
+            x: 0,
+            y: 0
+          }
+        }
+      }
+
       flyoutPatched = true
       // Force a re-position now that getX is patched
       flyout.position()
@@ -848,38 +937,40 @@ export default function BlocklyEditor() {
       }
     })
 
-    const centerBlocksHorizontally = () => {
+    const centerViewHorizontally = () => {
       if (!workspace) return
       const topBlocks = workspace.getTopBlocks(false)
-      if (topBlocks.length > 0) {
-        const topBlock = topBlocks[0]
-        const blockWidth = topBlock.getHeightWidth().width
-        const metrics = workspace.getMetrics()
-        const workspaceWidth = metrics.viewWidth
-        const targetX = Math.max(20, (workspaceWidth - blockWidth) / 2)
-        const currentX = topBlock.getRelativeToSurfaceXY().x
-        if (Math.abs(targetX - currentX) > 2) {
-          topBlock.moveBy(targetX - currentX, 0)
-        }
-      }
+      if (topBlocks.length === 0) return
+      const metrics = workspace.getMetrics()
+      if (!metrics) return
+      const targetScrollX = metrics.contentLeft + metrics.contentWidth / 2 - metrics.viewWidth / 2
+      workspace.scroll(targetScrollX, workspace.scrollY)
     }
 
     // Load initial workspace state
     try {
       const stateToLoad = droneBlocklyWorkspace || DEFAULT_WORKSPACE_STATE
       Blockly.serialization.workspaces.load(stateToLoad, workspace)
-      setTimeout(centerBlocksHorizontally, 50)
+      setTimeout(() => {
+        if (workspace) {
+          workspace.zoomToFit()
+          workspace.scrollCenter()
+        }
+      }, 50)
     } catch (err) {
       console.error('Failed to load Blockly workspace state:', err)
       Blockly.serialization.workspaces.load(DEFAULT_WORKSPACE_STATE, workspace)
-      setTimeout(centerBlocksHorizontally, 50)
+      setTimeout(() => {
+        if (workspace) {
+          workspace.zoomToFit()
+          workspace.scrollCenter()
+        }
+      }, 50)
     }
 
     // Listener to generate C++ code and update Zustand store
     const handleWorkspaceChange = (event) => {
       if (event.isUiEvent) return
-
-      centerBlocksHorizontally()
 
       try {
         const state = Blockly.serialization.workspaces.save(workspace)
@@ -896,15 +987,18 @@ export default function BlocklyEditor() {
     workspace.addChangeListener(handleWorkspaceChange)
 
     // Handle resizing
+    let resizeTimeout = null
     const resizeObserver = new ResizeObserver(() => {
       Blockly.svgResize(workspace)
-      centerBlocksHorizontally()
+      if (resizeTimeout) clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(centerViewHorizontally, 50)
     })
     if (blocklyDivRef.current.parentNode) {
       resizeObserver.observe(blocklyDivRef.current.parentNode)
     }
 
     return () => {
+      if (resizeTimeout) clearTimeout(resizeTimeout)
       workspace.removeChangeListener(handleWorkspaceChange)
       resizeObserver.disconnect()
       workspace.dispose()
@@ -999,10 +1093,15 @@ export default function BlocklyEditor() {
             if (workspaceRef.current) {
               if (window.confirm("Are you sure you want to clear all blocks from the workspace?")) {
                 workspaceRef.current.clear()
+                Blockly.serialization.workspaces.load(CLEAN_WORKSPACE_STATE, workspaceRef.current)
                 // Force code sync to game state
                 const code = javascriptGenerator.workspaceToCode(workspaceRef.current)
                 useGameStore.getState().setDroneScript(code)
-                useGameStore.setState({ droneBlocklyWorkspace: null })
+                useGameStore.setState({ droneBlocklyWorkspace: CLEAN_WORKSPACE_STATE })
+                
+                // Recenter
+                workspaceRef.current.zoomToFit()
+                workspaceRef.current.scrollCenter()
               }
             }
           }}

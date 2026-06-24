@@ -23,7 +23,9 @@ export default function DroneLogicPanel() {
   const setDroneEditorMode = useGameStore((s) => s.setDroneEditorMode)
   const editorTheme = useGameStore((s) => s.settings?.editorTheme || 'drone-dark')
 
-  const [activeTab, setActiveTab] = useState('editor') // 'editor' | 'console'
+  const [showConsole, setShowConsole] = useState(false)
+  const [baselineCode, setBaselineCode] = useState('')
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
   const runnerRef = useRef(null)
   const consoleEndRef = useRef(null)
   const editorRef = useRef(null)
@@ -97,10 +99,10 @@ export default function DroneLogicPanel() {
 
   // Auto-scroll console to bottom
   useEffect(() => {
-    if (consoleEndRef.current && activeTab === 'console') {
+    if (consoleEndRef.current && showConsole) {
       consoleEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [droneConsole, activeTab])
+  }, [droneConsole, showConsole])
 
   const clearLineHighlight = useCallback(() => {
     if (editorRef.current && decorationsRef.current.length > 0) {
@@ -368,124 +370,118 @@ export default function DroneLogicPanel() {
           <MaterialIcon icon="terminal" className="drone-logic-panel__header-icon" />
           <h3 className="drone-logic-panel__title font-headline-md">Drone Logic</h3>
         </div>
-        <div className="drone-logic-panel__traffic-lights">
-          <span className={`drone-logic-panel__dot ${droneStatus === 'running' ? 'drone-logic-panel__dot--running' : 'drone-logic-panel__dot--red'}`} />
-          <span className="drone-logic-panel__dot drone-logic-panel__dot--amber" />
-          <span className="drone-logic-panel__dot drone-logic-panel__dot--green" />
+        <div className="drone-logic-panel__header-right">
+          <button
+            className={`drone-logic-panel__console-toggle btn-press pixel-border ${showConsole ? 'drone-logic-panel__console-toggle--active' : ''}`}
+            onClick={() => setShowConsole(!showConsole)}
+            title="Toggle Console Log"
+          >
+            <MaterialIcon icon="terminal" />
+            <span>Console</span>
+            {droneConsole.length > 0 && (
+              <span className="drone-logic-panel__console-badge">{droneConsole.length}</span>
+            )}
+          </button>
+          <div className="drone-logic-panel__traffic-lights">
+            <span className={`drone-logic-panel__dot ${droneStatus === 'running' ? 'drone-logic-panel__dot--running' : 'drone-logic-panel__dot--red'}`} />
+            <span className="drone-logic-panel__dot drone-logic-panel__dot--amber" />
+            <span className="drone-logic-panel__dot drone-logic-panel__dot--green" />
+          </div>
         </div>
       </div>
 
-      {/* Tab Bar */}
-      <div className="drone-logic-panel__tabs">
+      {/* Editor Mode Selector */}
+      <div className="drone-logic-panel__mode-selector">
         <button
-          className={`drone-logic-panel__tab ${activeTab === 'editor' ? 'drone-logic-panel__tab--active' : ''}`}
-          onClick={() => setActiveTab('editor')}
+          className={`drone-logic-panel__mode-btn ${droneEditorMode === 'blocks' ? 'drone-logic-panel__mode-btn--active' : ''}`}
+          onClick={() => {
+            if (droneEditorMode === 'text' && droneScript !== baselineCode) {
+              setShowDiscardConfirm(true)
+            } else {
+              setDroneEditorMode('blocks')
+            }
+          }}
+        >
+          <MaterialIcon icon="widgets" />
+          <span>Block Editor</span>
+        </button>
+        <button
+          className={`drone-logic-panel__mode-btn ${droneEditorMode === 'text' ? 'drone-logic-panel__mode-btn--active' : ''}`}
+          onClick={() => {
+            if (droneEditorMode !== 'text') {
+              setBaselineCode(droneScript)
+              setDroneEditorMode('text')
+            }
+          }}
         >
           <MaterialIcon icon="code" />
-          <span>Editor</span>
-        </button>
-        <button
-          className={`drone-logic-panel__tab ${activeTab === 'console' ? 'drone-logic-panel__tab--active' : ''}`}
-          onClick={() => setActiveTab('console')}
-        >
-          <MaterialIcon icon="terminal" />
-          <span>Console</span>
-          {droneConsole.length > 0 && (
-            <span className="drone-logic-panel__tab-badge">{droneConsole.length}</span>
-          )}
+          <span>Code Editor</span>
         </button>
       </div>
 
-      {/* Editor Mode Selector (Only when Editor tab is active) */}
-      {activeTab === 'editor' && (
-        <div className="drone-logic-panel__mode-selector">
-          <button
-            className={`drone-logic-panel__mode-btn ${droneEditorMode === 'blocks' ? 'drone-logic-panel__mode-btn--active' : ''}`}
-            onClick={() => setDroneEditorMode('blocks')}
-          >
-            <MaterialIcon icon="widgets" />
-            <span>Block Editor</span>
-          </button>
-          <button
-            className={`drone-logic-panel__mode-btn ${droneEditorMode === 'text' ? 'drone-logic-panel__mode-btn--active' : ''}`}
-            onClick={() => {
-              if (window.confirm("Switching to Text Editor will let you edit the code directly, but block modifications won't sync back to the block layout automatically. Continue?")) {
-                setDroneEditorMode('text');
-              }
-            }}
-          >
-            <MaterialIcon icon="code" />
-            <span>Code Editor</span>
-          </button>
-        </div>
-      )}
-
       {/* Editor Panel — Blockly or Monaco Editor */}
-      {activeTab === 'editor' && (
-        <div className="drone-logic-panel__editor-container">
-          {droneEditorMode === 'blocks' ? (
-            <div className="drone-logic-panel__blockly-wrapper">
-              <BlocklyEditor />
-              <div className="drone-logic-panel__code-preview">
-                <details className="drone-logic-panel__preview-details">
-                  <summary className="font-label-tech">👁️ Generated Arduino C++ Code</summary>
-                  <pre className="drone-logic-panel__preview-code"><code>{droneScript}</code></pre>
-                </details>
-              </div>
+      <div className="drone-logic-panel__editor-container">
+        {droneEditorMode === 'blocks' ? (
+          <div className="drone-logic-panel__blockly-wrapper">
+            <BlocklyEditor />
+            <div className="drone-logic-panel__code-preview">
+              <details className="drone-logic-panel__preview-details">
+                <summary className="font-label-tech">👁️ Generated Arduino C++ Code</summary>
+                <pre className="drone-logic-panel__preview-code"><code>{droneScript}</code></pre>
+              </details>
             </div>
-          ) : (
-            <div className="drone-logic-panel__editor">
-              <Editor
-                height="100%"
-                defaultLanguage="cpp"
-                defaultValue={useGameStore.getState().droneScript || ''}
-                onChange={handleEditorChange}
-                onMount={handleEditorMount}
-                theme={editorTheme}
-                options={{
-                  fontSize: 15,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  lineHeight: 20,
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  tabSize: 2,
-                  automaticLayout: true,
-                  readOnly: droneStatus === 'running',
-                  suggestOnTriggerCharacters: true,
-                  quickSuggestions: true,
-                  padding: { top: 12, bottom: 12 },
-                  lineNumbers: 'on',
-                  lineNumbersMinChars: 3,
-                  glyphMargin: true,
-                  folding: false,
-                  lineDecorationsWidth: 12,
-                  overviewRulerLanes: 0,
-                  hideCursorInOverviewRuler: true,
-                  overviewRulerBorder: false,
-                  scrollbar: {
-                    vertical: 'auto',
-                    horizontal: 'auto',
-                    verticalScrollbarSize: 8,
-                    horizontalScrollbarSize: 8,
-                  },
-                  renderLineHighlight: 'line',
-                  fixedOverflowWidgets: true,
-                }}
-                loading={
-                  <div className="drone-logic-panel__loading">
-                    <span className="font-label-tech">Loading editor...</span>
-                  </div>
-                }
-              />
-            </div>
-          )}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="drone-logic-panel__editor">
+            <Editor
+              height="100%"
+              defaultLanguage="cpp"
+              defaultValue={useGameStore.getState().droneScript || ''}
+              onChange={handleEditorChange}
+              onMount={handleEditorMount}
+              theme={editorTheme}
+              options={{
+                fontSize: 15,
+                fontFamily: "'JetBrains Mono', monospace",
+                lineHeight: 20,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                tabSize: 2,
+                automaticLayout: true,
+                readOnly: droneStatus === 'running',
+                suggestOnTriggerCharacters: true,
+                quickSuggestions: true,
+                padding: { top: 12, bottom: 12 },
+                lineNumbers: 'on',
+                lineNumbersMinChars: 3,
+                glyphMargin: true,
+                folding: false,
+                lineDecorationsWidth: 12,
+                overviewRulerLanes: 0,
+                hideCursorInOverviewRuler: true,
+                overviewRulerBorder: false,
+                scrollbar: {
+                  vertical: 'auto',
+                  horizontal: 'auto',
+                  verticalScrollbarSize: 8,
+                  horizontalScrollbarSize: 8,
+                },
+                renderLineHighlight: 'line',
+                fixedOverflowWidgets: true,
+              }}
+              loading={
+                <div className="drone-logic-panel__loading">
+                  <span className="font-label-tech">Loading editor...</span>
+                </div>
+              }
+            />
+          </div>
+        )}
+      </div>
 
-
-      {/* Console Panel */}
-      {activeTab === 'console' && (
+      {/* Console Panel (rendered at the bottom when showConsole is true) */}
+      {showConsole && (
         <div className="drone-logic-panel__console top-light-inset">
           {droneConsole.length === 0 ? (
             <div className="drone-logic-panel__console-empty">
@@ -506,7 +502,7 @@ export default function DroneLogicPanel() {
       )}
 
       {/* API Reference Hint (Only in Code Editor mode) */}
-      {activeTab === 'editor' && droneEditorMode === 'text' && (
+      {droneEditorMode === 'text' && (
         <div className="drone-logic-panel__hints">
           <details className="drone-logic-panel__api-ref">
             <summary className="font-label-tech">📖 API Reference</summary>
@@ -602,6 +598,45 @@ export default function DroneLogicPanel() {
           </button>
         </div>
       </div>
+
+      {/* Discard Changes Confirmation Modal */}
+      {showDiscardConfirm && (
+        <div className="sandbox-page__modal-overlay">
+          <div className="sandbox-page__modal-card pixel-border-thick top-light-inset">
+            <div className="sandbox-page__modal-header">
+              <MaterialIcon icon="warning" className="sandbox-page__modal-icon" style={{ color: 'var(--color-error)' }} />
+              <h2 className="font-headline-md sandbox-page__modal-title">DISCARD MANUAL EDITS?</h2>
+            </div>
+            <div className="sandbox-page__modal-body">
+              <p className="font-body-md" style={{ marginBottom: '8px', color: '#5c4335' }}>
+                Switching back to the Block Editor will **discard** any text edits you manually wrote in the Code Editor.
+              </p>
+              <p className="font-body-md" style={{ color: '#5c4335' }}>
+                Your layout blocks will revert to their previous configuration.
+              </p>
+            </div>
+            <div className="sandbox-page__modal-actions">
+              <button 
+                className="sandbox-page__modal-btn sandbox-page__modal-btn--danger pixel-border btn-press font-label-tech"
+                onClick={() => {
+                  setDroneEditorMode('blocks')
+                  setShowDiscardConfirm(false)
+                }}
+              >
+                DISCARD & CONTINUE
+              </button>
+              <button 
+                className="sandbox-page__modal-btn sandbox-page__modal-btn--cancel pixel-border btn-press font-label-tech"
+                onClick={() => {
+                  setShowDiscardConfirm(false)
+                }}
+              >
+                CANCEL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   )
 }

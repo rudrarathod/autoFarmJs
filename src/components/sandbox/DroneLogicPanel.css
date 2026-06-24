@@ -61,60 +61,49 @@
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
-/* ---- Tab Bar ---- */
-.drone-logic-panel__tabs {
-  display: flex;
-  border-bottom: 2px solid var(--color-outline);
-  background-color: var(--color-surface-container);
-}
-
-.drone-logic-panel__tab {
-  flex: 1;
+/* ---- Header Right & Console Toggle ---- */
+.drone-logic-panel__header-right {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 12px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--color-on-surface-variant);
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: color 0.15s ease, background-color 0.15s ease;
-  position: relative;
+  gap: 12px;
 }
 
-.drone-logic-panel__tab:hover {
+.drone-logic-panel__console-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-on-surface-variant);
+  background-color: var(--color-surface);
+  cursor: pointer;
+  height: 30px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.drone-logic-panel__console-toggle:hover {
   background-color: rgba(0, 0, 0, 0.04);
 }
 
-.drone-logic-panel__tab--active {
-  color: var(--color-meadow-green);
-  background-color: rgba(76, 175, 80, 0.06);
+.drone-logic-panel__console-toggle--active {
+  color: var(--color-meadow-green) !important;
+  background-color: rgba(76, 175, 80, 0.06) !important;
+  border-color: var(--color-meadow-green) !important;
 }
 
-.drone-logic-panel__tab--active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background-color: var(--color-meadow-green);
-}
-
-.drone-logic-panel__tab-badge {
+.drone-logic-panel__console-badge {
   background-color: var(--color-meadow-green);
   color: #fff;
-  font-size: 15px;
+  font-size: 11px;
   font-weight: 800;
   padding: 1px 5px;
-  border-radius: 8px;
-  min-width: 16px;
+  border-radius: 6px;
+  min-width: 14px;
   text-align: center;
+  line-height: 12px;
 }
 
 /* ---- Monaco Editor Container ---- */
@@ -139,10 +128,12 @@
 
 /* ---- Console ---- */
 .drone-logic-panel__console {
-  flex: 1;
+  height: 200px;
   background-color: var(--color-inverse-surface);
+  border-top: 2px solid var(--color-outline);
   overflow-y: auto;
   padding: 12px;
+  flex-shrink: 0;
 }
 
 .drone-logic-panel__console-empty {
@@ -558,5 +549,20 @@
 .drone-logic-panel__resize-handle--dragging::after {
   opacity: 1;
   background-color: var(--color-meadow-green);
+}
+
+/* Custom Danger Button for Modals */
+.sandbox-page__modal-btn--danger {
+  background-color: var(--color-error, #ba1a1a) !important;
+  color: #ffffff !important;
+  border: 3px solid #3c2a21 !important;
+  box-shadow: 
+    inset -3px -3px 0px 0px #8c0009,
+    inset 3px 3px 0px 0px #ffb4ab !important;
+}
+
+.sandbox-page__modal-btn--danger:hover {
+  background-color: #a6121b !important;
+  filter: brightness(1.1);
 }
 
