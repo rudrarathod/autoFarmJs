@@ -673,7 +673,7 @@ export default function BlocklyEditor() {
 
         // Set up MutationObserver to compute and set the inverse transform on the clip rect
         // This cancels out workspace canvas scrolling/zooming translations so clipping stays static at (0, 0)
-        const canvas = blocklySvg.querySelector('.blocklyBlockCanvas')
+        const canvas = blocklySvg.querySelector(':scope > .blocklyWorkspaceCanvas > .blocklyBlockCanvas')
         const rect = clipPath.querySelector('rect')
         
         if (canvas && rect) {

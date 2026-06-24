@@ -307,8 +307,8 @@
   z-index: 120 !important;
 }
 
-/* Clip the workspace canvas and bubble canvas to prevent blocks from spilling over to the left inventory pane */
-.blocklyBlockCanvas,
-.blocklyBubbleCanvas {
+/* Clip only the main workspace block and bubble canvas to prevent blocks from spilling over to the left inventory pane, while keeping flyout blocks visible */
+.blocklySvg > .blocklyWorkspaceCanvas > .blocklyBlockCanvas,
+.blocklySvg > .blocklyWorkspaceCanvas > .blocklyBubbleCanvas {
   clip-path: url(#blocklyWorkspaceClip) !important;
 }
