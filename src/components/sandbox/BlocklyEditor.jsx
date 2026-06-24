@@ -635,63 +635,84 @@ function getToolboxConfig(unlockedNodes) {
   };
 }
 
-// Custom theme for Blockly matching cozy retro solar-punk/dark aesthetics
-const theme = Blockly.Theme.defineTheme('ruralDark', {
+const themeColors = {
+  'solar-punk': {
+    logic: '#d19a66',
+    loop: '#c678dd',
+    math: '#d19a66',
+    text: '#56b6c2',
+    variable: '#e5c07b',
+    procedure: '#e06c75',
+    control: '#c678dd',
+    action: '#4caf50',
+    sensor: '#2196f3',
+    system: '#9e9e9e'
+  },
+  'cyber-punk': {
+    logic: '#ff00ff',
+    loop: '#00ffff',
+    math: '#ffcc00',
+    text: '#00ff66',
+    variable: '#ff5500',
+    procedure: '#ff0055',
+    control: '#9900ff',
+    action: '#00ff66',
+    sensor: '#00f0ff',
+    system: '#7f7f7f'
+  },
+  'classic-amber': {
+    logic: '#e69d00',
+    loop: '#cc8b00',
+    math: '#ffd166',
+    text: '#ffb000',
+    variable: '#ff9f00',
+    procedure: '#b37b00',
+    control: '#996900',
+    action: '#ffd166',
+    sensor: '#ffb000',
+    system: '#805800'
+  },
+  'alabaster-light': {
+    logic: '#e28743',
+    loop: '#76b5c5',
+    math: '#e2b043',
+    text: '#873e23',
+    variable: '#1e3d59',
+    procedure: '#ff6e40',
+    control: '#76b5c5',
+    action: '#2e5a27',
+    sensor: '#1976d2',
+    system: '#616161'
+  }
+}
+
+// Initial theme definition (valid static colors to pass inject time validations)
+const initialTheme = Blockly.Theme.defineTheme('ruralTheme_initial', {
   'base': Blockly.Themes.Classic,
   'blockStyles': {
-    'logic_blocks': {
-      'colourPrimary': '#f9e2af',
-      'colourSecondary': '#f9e2af'
-    },
-    'loop_blocks': {
-      'colourPrimary': '#cba6f7',
-      'colourSecondary': '#cba6f7'
-    },
-    'math_blocks': {
-      'colourPrimary': '#f9e2af',
-      'colourSecondary': '#f9e2af'
-    },
-    'text_blocks': {
-      'colourPrimary': '#a6e3a1',
-      'colourSecondary': '#a6e3a1'
-    },
-    'variable_blocks': {
-      'colourPrimary': '#fab387',
-      'colourSecondary': '#fab387'
-    },
-    'procedure_blocks': {
-      'colourPrimary': '#f38ba8',
-      'colourSecondary': '#f38ba8'
-    },
-    'control_blocks': {
-      'colourPrimary': '#cba6f7',
-      'colourSecondary': '#cba6f7'
-    },
-    'action_blocks': {
-      'colourPrimary': '#a6e3a1',
-      'colourSecondary': '#a6e3a1'
-    },
-    'sensor_blocks': {
-      'colourPrimary': '#89dceb',
-      'colourSecondary': '#89dceb'
-    },
-    'system_blocks': {
-      'colourPrimary': '#eba0ac',
-      'colourSecondary': '#eba0ac'
-    }
+    'logic_blocks': { 'colourPrimary': '#d19a66', 'colourSecondary': '#d19a66' },
+    'loop_blocks': { 'colourPrimary': '#c678dd', 'colourSecondary': '#c678dd' },
+    'math_blocks': { 'colourPrimary': '#d19a66', 'colourSecondary': '#d19a66' },
+    'text_blocks': { 'colourPrimary': '#56b6c2', 'colourSecondary': '#56b6c2' },
+    'variable_blocks': { 'colourPrimary': '#e5c07b', 'colourSecondary': '#e5c07b' },
+    'procedure_blocks': { 'colourPrimary': '#e06c75', 'colourSecondary': '#e06c75' },
+    'control_blocks': { 'colourPrimary': '#c678dd', 'colourSecondary': '#c678dd' },
+    'action_blocks': { 'colourPrimary': '#4caf50', 'colourSecondary': '#4caf50' },
+    'sensor_blocks': { 'colourPrimary': '#2196f3', 'colourSecondary': '#2196f3' },
+    'system_blocks': { 'colourPrimary': '#9e9e9e', 'colourSecondary': '#9e9e9e' }
   },
   'componentStyles': {
-    'workspaceBackgroundColour': 'transparent',
-    'toolboxBackgroundColour': 'transparent',
-    'toolboxForegroundColour': 'transparent',
-    'flyoutBackgroundColour': 'transparent',
-    'flyoutForegroundColour': 'transparent',
-    'scrollbarColour': 'transparent',
+    'workspaceBackgroundColour': 'var(--color-ui-bg-paper, #1e1e2e)',
+    'toolboxBackgroundColour': 'var(--color-surface, #191a24)',
+    'toolboxForegroundColour': 'var(--color-on-surface, #cdd6f4)',
+    'flyoutBackgroundColour': 'var(--color-surface-container-low, #1e1e2e)',
+    'flyoutForegroundColour': 'var(--color-on-surface, #cdd6f4)',
+    'scrollbarColour': 'var(--color-outline, #313244)',
     'scrollbarOpacity': 0.6,
-    'insertionMarkerColour': '#a6e3a1',
+    'insertionMarkerColour': 'var(--color-meadow-green, #a6e3a1)',
     'insertionMarkerOpacity': 0.2
   }
-});
+})
 
 export default function BlocklyEditor() {
   const blocklyDivRef = useRef(null)
@@ -699,6 +720,7 @@ export default function BlocklyEditor() {
 
   const unlockedNodes = useGameStore((s) => s.unlockedNodes)
   const droneBlocklyWorkspace = useGameStore((s) => s.droneBlocklyWorkspace)
+  const colorTheme = useGameStore((s) => s.settings?.colorTheme || 'solar-punk')
 
   // Initialize Blockly Workspace
   useEffect(() => {
@@ -707,7 +729,7 @@ export default function BlocklyEditor() {
     // Inject Blockly
     const workspace = Blockly.inject(blocklyDivRef.current, {
       toolbox: getToolboxConfig(unlockedNodes),
-      theme: theme,
+      theme: initialTheme,
       renderer: RENDERER_NAME, // Custom flat pixelated block renderer
       grid: {
         spacing: 20,
@@ -782,6 +804,40 @@ export default function BlocklyEditor() {
       workspaceRef.current.updateToolbox(newToolbox)
     }
   }, [unlockedNodes])
+
+  // Dynamically update theme based on settings.colorTheme change
+  useEffect(() => {
+    if (workspaceRef.current) {
+      const colors = themeColors[colorTheme] || themeColors['solar-punk']
+      const dynamicTheme = Blockly.Theme.defineTheme('ruralTheme_' + colorTheme, {
+        'base': Blockly.Themes.Classic,
+        'blockStyles': {
+          'logic_blocks': { 'colourPrimary': colors.logic, 'colourSecondary': colors.logic },
+          'loop_blocks': { 'colourPrimary': colors.loop, 'colourSecondary': colors.loop },
+          'math_blocks': { 'colourPrimary': colors.math, 'colourSecondary': colors.math },
+          'text_blocks': { 'colourPrimary': colors.text, 'colourSecondary': colors.text },
+          'variable_blocks': { 'colourPrimary': colors.variable, 'colourSecondary': colors.variable },
+          'procedure_blocks': { 'colourPrimary': colors.procedure, 'colourSecondary': colors.procedure },
+          'control_blocks': { 'colourPrimary': colors.control, 'colourSecondary': colors.control },
+          'action_blocks': { 'colourPrimary': colors.action, 'colourSecondary': colors.action },
+          'sensor_blocks': { 'colourPrimary': colors.sensor, 'colourSecondary': colors.sensor },
+          'system_blocks': { 'colourPrimary': colors.system, 'colourSecondary': colors.system }
+        },
+        'componentStyles': {
+          'workspaceBackgroundColour': 'var(--color-ui-bg-paper, #1e1e2e)',
+          'toolboxBackgroundColour': 'var(--color-surface, #191a24)',
+          'toolboxForegroundColour': 'var(--color-on-surface, #cdd6f4)',
+          'flyoutBackgroundColour': 'var(--color-surface-container-low, #1e1e2e)',
+          'flyoutForegroundColour': 'var(--color-on-surface, #cdd6f4)',
+          'scrollbarColour': 'var(--color-outline, #313244)',
+          'scrollbarOpacity': 0.6,
+          'insertionMarkerColour': 'var(--color-meadow-green, #a6e3a1)',
+          'insertionMarkerOpacity': 0.2
+        }
+      });
+      workspaceRef.current.setTheme(dynamicTheme)
+    }
+  }, [colorTheme])
 
   return (
     <div className="blockly-editor-container">

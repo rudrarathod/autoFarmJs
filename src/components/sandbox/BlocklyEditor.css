@@ -4,7 +4,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background-color: var(--color-surface-container-low, var(--color-surface, #1e1e2e));
+  background-color: var(--color-ui-bg-paper);
   min-height: 0;
   overflow: hidden;
 }
@@ -17,20 +17,20 @@
 
 /* Custom styles for Blockly SVG elements */
 .blocklyToolboxDiv {
-  background-color: var(--color-surface-container, var(--color-surface, #191a24)) !important;
+  background-color: var(--color-surface) !important;
   border-right: 2px solid var(--color-outline) !important;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15) !important;
   padding: 8px 4px !important;
   width: 140px !important; /* Force a consistent width */
   box-sizing: border-box;
 }
 
-/* Force category label colors to match theme foreground */
+/* Force category label colors to high contrast theme text */
 .blocklyToolboxDiv .blocklyTreeLabel,
 .blocklyToolboxDiv .blocklyTreeRow,
 .blocklyToolboxDiv span,
 .blocklyToolboxDiv div {
-  color: var(--color-on-surface, #cdd6f4) !important;
+  color: var(--color-on-surface) !important;
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 13px !important;
   font-weight: 700 !important;
@@ -52,8 +52,8 @@
 }
 
 .blocklyTreeRow:hover {
-  background-color: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
 .blocklyTreeRow.blocklyTreeSelected {
@@ -63,32 +63,32 @@
 
 .blocklyTreeRow.blocklyTreeSelected .blocklyTreeLabel,
 .blocklyTreeRow.blocklyTreeSelected span {
-  color: var(--color-meadow-green) !important;
+  color: var(--color-on-surface) !important;
 }
 
 /* Flat sharp corners for flyouts */
 .blocklyFlyoutBackground {
-  fill: var(--color-surface-container-high, var(--color-surface, #15161e)) !important;
+  fill: var(--color-surface-container-low) !important;
   fill-opacity: 0.95 !important;
   border-right: 2px solid var(--color-outline) !important;
 }
 
 /* Dropdown styling */
 .blocklyWidgetDiv .blocklyDropdownMenu {
-  background-color: var(--color-surface-container, var(--color-surface, #21222c)) !important;
+  background-color: var(--color-surface-container) !important;
   border: 2px solid var(--color-outline) !important;
   border-radius: 0px !important; /* Flat edges */
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3) !important;
 }
 
 .blocklyDropdownMenuItem {
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 13px !important;
-  color: var(--color-on-surface, #abb2bf) !important;
+  color: var(--color-on-surface) !important;
 }
 
 .blocklyDropdownMenuItemContent {
-  color: var(--color-on-surface, #abb2bf) !important;
+  color: var(--color-on-surface) !important;
 }
 
 .blocklyDropdownMenuItem:hover {
@@ -96,7 +96,7 @@
 }
 
 .blocklyDropdownMenuItem:hover .blocklyDropdownMenuItemContent {
-  color: #fff !important;
+  color: var(--color-on-primary) !important;
 }
 
 /* Zoom controls rendering */
@@ -154,29 +154,29 @@
 
 /* Custom scrollbars */
 .blocklyScrollbarHandle {
-  fill: var(--color-outline, #313244) !important;
-  opacity: 0.3 !important;
+  fill: var(--color-outline) !important;
   rx: 0px !important;
   ry: 0px !important;
+  opacity: 0.8 !important;
 }
 
 .blocklyScrollbarHandle:hover {
-  opacity: 0.6 !important;
+  fill: var(--color-outline-variant) !important;
 }
 
 .blocklyScrollbarBackground {
   opacity: 0 !important;
 }
 
-/* Match workspace grid lines to active theme */
-.blocklyGridLine {
-  stroke: var(--color-outline-variant, #3e4451) !important;
-}
-
 /* Make block borders and lines sharp and clear */
 .blocklyPath {
   stroke-width: 2px !important;
-  stroke: #11111b !important; /* Catppuccin Crust for dark sharp borders */
+  stroke: var(--color-soil-dark) !important; /* Theme colored borders */
+}
+
+/* Make the grid lines match the theme outline variant */
+.blocklyGrid line {
+  stroke: var(--color-outline-variant, rgba(0, 0, 0, 0.15)) !important;
 }
 
 /* Hide Geras-specific highlights and shadows to enforce a flat pixel style */
@@ -220,30 +220,4 @@
 
 .blockly-editor__control-btn--danger {
   color: var(--color-error, #ba1a1a) !important;
-}
-
-/* ---- Classic Amber CRT Theme override for blocks ---- */
-[data-theme='classic-amber'] .blocklyPath {
-  fill: #050400 !important;
-  stroke: #ffb000 !important;
-  stroke-width: 2px !important;
-}
-
-[data-theme='classic-amber'] .blocklySelected>.blocklyPath {
-  stroke: #ffb000 !important;
-  stroke-width: 4px !important;
-}
-
-[data-theme='classic-amber'] .blocklyTreeRow.blocklyTreeSelected {
-  background-color: rgba(255, 176, 0, 0.15) !important;
-  border-color: #ffb000 !important;
-}
-
-[data-theme='classic-amber'] .blocklyTreeRow.blocklyTreeSelected .blocklyTreeLabel {
-  color: #ffb000 !important;
-}
-
-/* ---- Cyber Punk Theme tweaks for category text color ---- */
-[data-theme='cyber-punk'] .blocklyToolboxDiv .blocklyTreeLabel {
-  text-shadow: 0 0 4px #00ffff;
 }
