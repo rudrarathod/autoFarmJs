@@ -857,21 +857,9 @@ export default function BlocklyEditor() {
     try {
       const stateToLoad = droneBlocklyWorkspace || DEFAULT_WORKSPACE_STATE
       Blockly.serialization.workspaces.load(stateToLoad, workspace)
-      setTimeout(() => {
-        if (workspace) {
-          workspace.zoomToFit()
-          workspace.scrollCenter()
-        }
-      }, 50)
     } catch (err) {
       console.error('Failed to load Blockly workspace state:', err)
       Blockly.serialization.workspaces.load(DEFAULT_WORKSPACE_STATE, workspace)
-      setTimeout(() => {
-        if (workspace) {
-          workspace.zoomToFit()
-          workspace.scrollCenter()
-        }
-      }, 50)
     }
 
     // Listener to generate C++ code and update Zustand store
@@ -908,10 +896,26 @@ export default function BlocklyEditor() {
     workspace.addChangeListener(handleWorkspaceChange)
     workspace.addChangeListener(handleVariableValidation)
 
-    // Handle resizing
+    // Handle resizing and initial fit
+    let initialFitDone = false
     let resizeTimeout = null
-    const resizeObserver = new ResizeObserver(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
       Blockly.svgResize(workspace)
+      
+      // Perform initial zoomToFit and scrollCenter once the container has valid dimensions
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect
+        if (width > 0 && height > 0 && !initialFitDone) {
+          initialFitDone = true
+          setTimeout(() => {
+            if (workspace) {
+              workspace.zoomToFit()
+              workspace.scrollCenter()
+            }
+          }, 100)
+        }
+      }
+
       if (resizeTimeout) clearTimeout(resizeTimeout)
       resizeTimeout = setTimeout(centerViewHorizontally, 50)
     })
