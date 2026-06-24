@@ -6,13 +6,14 @@
   flex-direction: column;
   background-color: var(--color-ui-bg-paper);
   min-height: 0;
-  overflow: hidden;
+  overflow: visible !important;
 }
 
 .blockly-editor-workspace {
   flex: 1;
   width: 100%;
   height: 100%;
+  overflow: visible !important;
 }
 
 /* Custom styles for Blockly SVG elements */
@@ -70,7 +71,32 @@
 .blocklyFlyoutBackground {
   fill: var(--color-surface-container-low) !important;
   fill-opacity: 0.95 !important;
-  border-right: 2px solid var(--color-outline) !important;
+  stroke: var(--color-outline) !important;
+  stroke-width: 2px !important;
+}
+
+.blocklySvg {
+  overflow: visible !important;
+  clip-path: inset(0px 0px 0px -400px) !important;
+}
+
+.injectionDiv {
+  overflow: visible !important;
+}
+
+@keyframes flyoutFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.blocklyFlyout {
+  z-index: 100 !important;
+  animation: flyoutFadeIn 0.15s ease-out forwards;
+  filter: drop-shadow(-8px 8px 0px rgba(0, 0, 0, 0.2)) !important;
 }
 
 /* Dropdown styling */
@@ -189,6 +215,21 @@
 .blocklySelected>.blocklyPath {
   stroke: var(--color-meadow-green) !important;
   stroke-width: 3px !important;
+}
+
+/* Style the snap preview / insertion marker paths to be dashed and distinct */
+.blocklyInsertionMarker .blocklyPath {
+  stroke-dasharray: 4 4 !important;
+  stroke: var(--color-meadow-green, #4caf50) !important;
+  stroke-width: 2px !important;
+  fill-opacity: 0.15 !important;
+}
+
+/* Hide block texts and icon groups inside the snap preview to make it a clean shape outline */
+.blocklyInsertionMarker .blocklyText,
+.blocklyInsertionMarker .blocklyIconGroup,
+.blocklyInsertionMarker .blocklyEditableText {
+  display: none !important;
 }
 
 /* Custom floating controls to match sandbox tool styles */

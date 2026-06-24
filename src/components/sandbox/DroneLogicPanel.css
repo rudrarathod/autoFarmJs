@@ -10,6 +10,7 @@
   z-index: 100;
   box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
+  overflow: visible !important;
 }
 
 .drone-logic-panel__header {
@@ -410,6 +411,7 @@
   flex-direction: column;
   min-height: 0;
   background-color: #1e1e2e;
+  overflow: visible !important;
 }
 
 .drone-logic-panel__blockly-wrapper {
@@ -418,6 +420,7 @@
   flex-direction: column;
   min-height: 0;
   position: relative;
+  overflow: visible !important;
 }
 
 /* Mode Switcher Buttons */

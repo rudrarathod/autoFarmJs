@@ -646,7 +646,8 @@ const themeColors = {
     control: '#c678dd',
     action: '#4caf50',
     sensor: '#2196f3',
-    system: '#9e9e9e'
+    system: '#9e9e9e',
+    marker: '#81c784'
   },
   'cyber-punk': {
     logic: '#ff00ff',
@@ -658,7 +659,8 @@ const themeColors = {
     control: '#9900ff',
     action: '#00ff66',
     sensor: '#00f0ff',
-    system: '#7f7f7f'
+    system: '#7f7f7f',
+    marker: '#00ff66'
   },
   'classic-amber': {
     logic: '#e69d00',
@@ -670,7 +672,8 @@ const themeColors = {
     control: '#996900',
     action: '#ffd166',
     sensor: '#ffb000',
-    system: '#805800'
+    system: '#805800',
+    marker: '#ffb000'
   },
   'alabaster-light': {
     logic: '#e28743',
@@ -682,7 +685,8 @@ const themeColors = {
     control: '#76b5c5',
     action: '#2e5a27',
     sensor: '#1976d2',
-    system: '#616161'
+    system: '#616161',
+    marker: '#4caf50'
   }
 }
 
@@ -709,7 +713,7 @@ const initialTheme = Blockly.Theme.defineTheme('ruralTheme_initial', {
     'flyoutForegroundColour': 'var(--color-on-surface, #cdd6f4)',
     'scrollbarColour': 'var(--color-outline, #313244)',
     'scrollbarOpacity': 0.6,
-    'insertionMarkerColour': 'var(--color-meadow-green, #a6e3a1)',
+    'insertionMarkerColour': '#81c784',
     'insertionMarkerOpacity': 0.2
   }
 })
@@ -748,25 +752,134 @@ export default function BlocklyEditor() {
       trashcan: false,
       move: {
         scrollbars: true,
-        drag: true,
-        wheel: false
+        drag: false,
+        wheel: true
       }
     })
 
     workspaceRef.current = workspace
 
+    // Monkey-patch flyout to open to the LEFT (outside the drone logic panel).
+    // Strategy: Override getX() on the flyout so Blockly positions it at
+    // negative X (to the left of the toolbox). Also fix parent element overflow
+    // and clip-path attributes that would hide the shifted flyout.
+    let flyoutPatched = false
+    const patchFlyout = () => {
+      if (flyoutPatched) return
+      const toolbox = workspace.getToolbox()
+      const flyout = toolbox ? toolbox.getFlyout() : workspace.getFlyout()
+      if (!flyout) return
+
+      // Override getX to place flyout to the left with a small gap
+      flyout.getX = function () {
+        if (!this.isVisible()) return 0
+        const gap = 16 // Margin between flyout and panel
+        return -this.getWidth() - gap
+      }
+
+      // Custom rounded background path with top/bottom margins
+      flyout.setBackgroundPath_ = function (width, height) {
+        const margin = 12
+        const r = 8 // border radius
+        const h = Math.max(0, height - margin * 2)
+        const w = width
+        
+        const path = [
+          `M 0,${margin + r}`,
+          `a ${r},${r} 0 0 1 ${r},-${r}`,
+          `h ${w - 2 * r}`,
+          `a ${r},${r} 0 0 1 ${r},${r}`,
+          `v ${h - 2 * r}`,
+          `a ${r},${r} 0 0 1 -${r},${r}`,
+          `h -${w - 2 * r}`,
+          `a ${r},${r} 0 0 1 -${r},-${r}`,
+          'z'
+        ].join(' ')
+        
+        if (this.svgBackground_) {
+          this.svgBackground_.setAttribute('d', path)
+        }
+      }
+
+      // Override getClientRect for drag-target hit-testing
+      const origGetClientRect = flyout.getClientRect.bind(flyout)
+      flyout.getClientRect = function () {
+        const rect = origGetClientRect()
+        if (!rect || !this.svgGroup_) return rect
+        const svgRect = this.svgGroup_.getBoundingClientRect()
+        return new Blockly.utils.Rect(svgRect.top, svgRect.bottom, svgRect.left, svgRect.right)
+      }
+
+      // Force overflow visible on Blockly's internal DOM containers
+      const injectionDiv = blocklyDivRef.current?.querySelector('.injectionDiv')
+      if (injectionDiv) {
+        injectionDiv.style.overflow = 'visible'
+      }
+      const blocklySvg = blocklyDivRef.current?.querySelector('.blocklySvg')
+      if (blocklySvg) {
+        blocklySvg.style.overflow = 'visible'
+        blocklySvg.setAttribute('overflow', 'visible')
+      }
+      // Ensure the flyout SVG group itself has no clipping
+      if (flyout.svgGroup_) {
+        flyout.svgGroup_.style.overflow = 'visible'
+        flyout.svgGroup_.setAttribute('overflow', 'visible')
+      }
+
+      flyout.autoClose = false
+
+      flyoutPatched = true
+      // Force a re-position now that getX is patched
+      flyout.position()
+    }
+
+    // Try patching immediately and on short delay
+    patchFlyout()
+    setTimeout(patchFlyout, 200)
+
+    // Also patch when a toolbox item is selected (flyout becomes available)
+    workspace.addChangeListener((event) => {
+      if (event.type === 'toolbox_item_select') {
+        // Small delay to let Blockly create/show the flyout first
+        setTimeout(() => {
+          flyoutPatched = false  // Allow re-patching
+          patchFlyout()
+        }, 50)
+      }
+    })
+
+    const centerBlocksHorizontally = () => {
+      if (!workspace) return
+      const topBlocks = workspace.getTopBlocks(false)
+      if (topBlocks.length > 0) {
+        const topBlock = topBlocks[0]
+        const blockWidth = topBlock.getHeightWidth().width
+        const metrics = workspace.getMetrics()
+        const workspaceWidth = metrics.viewWidth
+        const targetX = Math.max(20, (workspaceWidth - blockWidth) / 2)
+        const currentX = topBlock.getRelativeToSurfaceXY().x
+        if (Math.abs(targetX - currentX) > 2) {
+          topBlock.moveBy(targetX - currentX, 0)
+        }
+      }
+    }
+
     // Load initial workspace state
     try {
       const stateToLoad = droneBlocklyWorkspace || DEFAULT_WORKSPACE_STATE
       Blockly.serialization.workspaces.load(stateToLoad, workspace)
+      setTimeout(centerBlocksHorizontally, 50)
     } catch (err) {
       console.error('Failed to load Blockly workspace state:', err)
       Blockly.serialization.workspaces.load(DEFAULT_WORKSPACE_STATE, workspace)
+      setTimeout(centerBlocksHorizontally, 50)
     }
 
     // Listener to generate C++ code and update Zustand store
     const handleWorkspaceChange = (event) => {
       if (event.isUiEvent) return
+
+      centerBlocksHorizontally()
 
       try {
         const state = Blockly.serialization.workspaces.save(workspace)
@@ -785,6 +898,7 @@ export default function BlocklyEditor() {
     // Handle resizing
     const resizeObserver = new ResizeObserver(() => {
       Blockly.svgResize(workspace)
+      centerBlocksHorizontally()
     })
     if (blocklyDivRef.current.parentNode) {
       resizeObserver.observe(blocklyDivRef.current.parentNode)
@@ -831,7 +945,7 @@ export default function BlocklyEditor() {
           'flyoutForegroundColour': 'var(--color-on-surface, #cdd6f4)',
           'scrollbarColour': 'var(--color-outline, #313244)',
           'scrollbarOpacity': 0.6,
-          'insertionMarkerColour': 'var(--color-meadow-green, #a6e3a1)',
+          'insertionMarkerColour': colors.marker,
           'insertionMarkerOpacity': 0.2
         }
       });
